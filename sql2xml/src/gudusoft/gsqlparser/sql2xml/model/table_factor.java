@@ -1,7 +1,13 @@
 package gudusoft.gsqlparser.sql2xml.model;
 
+import org.simpleframework.xml.Element;
+
 
 public class table_factor
 {
-
+	@Element
+	private table_primary table_primary;
+	
+	@Element(required = false)
+	private sample_clause sample_clause;
 }
