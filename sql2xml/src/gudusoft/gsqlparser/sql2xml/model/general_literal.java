@@ -15,7 +15,7 @@ public class general_literal
 	private unicode_character_string_literal unicode_character_string_literal;
 	
 	@Element(required = false)
-	private binary_string_literal binary_string_literal;
+	private String binary_string_literal;
 	
 	@Element(required = false)
 	private datetime_literal datetime_literal;
@@ -24,5 +24,5 @@ public class general_literal
 	private interval_literal interval_literal;
 	
 	@Element(required = false)
-	private boolean_literal boolean_literal;
+	private String boolean_literal;
 }

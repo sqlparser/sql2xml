@@ -16,5 +16,5 @@ public class direct_sql_statement
 	private directly_executable_statement directly_executable_statement;
 	
 	@Element
-	private semicolon semicolon;
+	private String semicolon;
 }

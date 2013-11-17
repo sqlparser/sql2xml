@@ -13,7 +13,7 @@ public class qualified_join
 	private join_type join_type;
 
 	@Element
-	private kw_join kw_join;
+	private String kw_join;
 
 	@Element(name="table_reference_or_partitioned_join_table")
 	private table_reference_or_partitioned_join_table join_table;

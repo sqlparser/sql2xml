@@ -21,5 +21,5 @@ public class directly_executable_statement
 	private sql_session_statement sql_session_statement;
 	
 	@Element(required=false)
-	private direct_implementation_defined_statement direct_implementation_defined_statement;
+	private String direct_implementation_defined_statement;
 }
