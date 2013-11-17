@@ -1,11 +1,23 @@
+
 package gudusoft.gsqlparser.sql2xml.model;
 
+import org.simpleframework.xml.Element;
 
 public class qualified_join
 {
-	private table_reference_or_partitioned_join_table table_reference_or_partitioned_join_table;
+
+	@Element(name="table_reference_or_partitioned_join_table")
+	private table_reference_or_partitioned_join_table table;
+
+	@Element(required = false)
 	private join_type join_type;
+
+	@Element
 	private kw_join kw_join;
-	private table_reference_or_partitioned_join_table table_reference_or_partitioned_join_table;
+
+	@Element(name="table_reference_or_partitioned_join_table")
+	private table_reference_or_partitioned_join_table join_table;
+
+	@Element
 	private join_specification join_specification;
 }
