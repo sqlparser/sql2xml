@@ -1,2 +1,3 @@
 *.class
 /bin
+sql2xml/bin
