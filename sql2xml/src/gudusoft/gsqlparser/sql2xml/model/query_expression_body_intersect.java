@@ -7,10 +7,10 @@ public class query_expression_body_intersect
 {
 
 	@Element
-	private query_term query_term;
+	private query_term query_term = new query_term( );
 
 	@Element
-	private String kw_intersect;
+	private String kw_intersect = "intersect";
 
 	@Element(required = false)
 	private set_quantifier set_quantifier;
@@ -19,26 +19,11 @@ public class query_expression_body_intersect
 	private corresponding_spec corresponding_spec;
 
 	@Element
-	private query_primary query_primary;
+	private query_primary query_primary = new query_primary( );
 
 	public query_term getQuery_term( )
 	{
 		return query_term;
-	}
-
-	public void setQuery_term( query_term query_term )
-	{
-		this.query_term = query_term;
-	}
-
-	public String getKw_intersect( )
-	{
-		return kw_intersect;
-	}
-
-	public void setKw_intersect( String kw_intersect )
-	{
-		this.kw_intersect = kw_intersect;
 	}
 
 	public set_quantifier getSet_quantifier( )
@@ -64,11 +49,6 @@ public class query_expression_body_intersect
 	public query_primary getQuery_primary( )
 	{
 		return query_primary;
-	}
-
-	public void setQuery_primary( query_primary query_primary )
-	{
-		this.query_primary = query_primary;
 	}
 
 }

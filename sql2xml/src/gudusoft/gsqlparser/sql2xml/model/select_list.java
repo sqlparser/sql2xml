@@ -15,4 +15,24 @@ public class select_list
 	@ElementList(entry = "select_sublist", inline = true, required = false)
 	private List<select_sublist> select_sublist;
 
+	public String getAsterisk( )
+	{
+		return asterisk;
+	}
+
+	public void setAsterisk( String asterisk )
+	{
+		this.asterisk = asterisk;
+	}
+
+	public List<select_sublist> getSelect_sublist( )
+	{
+		return select_sublist;
+	}
+
+	public void setSelect_sublist( List<select_sublist> select_sublist )
+	{
+		this.select_sublist = select_sublist;
+	}
+
 }

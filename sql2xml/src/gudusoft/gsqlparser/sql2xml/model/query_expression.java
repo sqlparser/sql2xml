@@ -10,7 +10,7 @@ public class query_expression
 	private with_clause with_clause;
 
 	@Element
-	private query_expression_body query_expression_body;
+	private query_expression_body query_expression_body = new query_expression_body( );
 
 	public with_clause getWith_clause( )
 	{
@@ -27,9 +27,4 @@ public class query_expression
 		return query_expression_body;
 	}
 
-	public void setQuery_expression_body(
-			query_expression_body query_expression_body )
-	{
-		this.query_expression_body = query_expression_body;
-	}
 }

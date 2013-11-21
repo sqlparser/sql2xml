@@ -7,7 +7,7 @@ public class sort_specification
 {
 
 	@Element
-	private sort_key sort_key;
+	private sort_key sort_key = new sort_key( );
 
 	@Element(required = false)
 	private ordering_specification ordering_specification;
@@ -18,11 +18,6 @@ public class sort_specification
 	public sort_key getSort_key( )
 	{
 		return sort_key;
-	}
-
-	public void setSort_key( sort_key sort_key )
-	{
-		this.sort_key = sort_key;
 	}
 
 	public ordering_specification getOrdering_specification( )

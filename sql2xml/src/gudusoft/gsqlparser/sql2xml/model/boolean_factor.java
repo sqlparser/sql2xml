@@ -10,5 +10,21 @@ public class boolean_factor
 	private String kw_not;
 
 	@Element
-	private boolean_test boolean_test;
+	private boolean_test boolean_test = new boolean_test( );
+
+	public String getKw_not( )
+	{
+		return kw_not;
+	}
+
+	public void setKw_not( String kw_not )
+	{
+		this.kw_not = kw_not;
+	}
+
+	public boolean_test getBoolean_test( )
+	{
+		return boolean_test;
+	}
+
 }

@@ -7,5 +7,11 @@ public class unqualified_schema_name
 {
 
 	@Element
-	private identifier identifier;
+	private identifier identifier = new identifier( );
+
+	public identifier getIdentifier( )
+	{
+		return identifier;
+	}
+
 }

@@ -35,12 +35,16 @@ import gudusoft.gsqlparser.sql2xml.model.query_expression_body_except;
 import gudusoft.gsqlparser.sql2xml.model.query_expression_body_intersect;
 import gudusoft.gsqlparser.sql2xml.model.query_expression_body_union;
 import gudusoft.gsqlparser.sql2xml.model.query_primary;
+import gudusoft.gsqlparser.sql2xml.model.query_specification;
 import gudusoft.gsqlparser.sql2xml.model.query_term;
 import gudusoft.gsqlparser.sql2xml.model.read_only_or_update_of;
+import gudusoft.gsqlparser.sql2xml.model.select_list;
+import gudusoft.gsqlparser.sql2xml.model.set_quantifier;
 import gudusoft.gsqlparser.sql2xml.model.simple_table;
 import gudusoft.gsqlparser.sql2xml.model.sort_key;
 import gudusoft.gsqlparser.sql2xml.model.sort_specification;
 import gudusoft.gsqlparser.sql2xml.model.sort_specification_list;
+import gudusoft.gsqlparser.sql2xml.model.table_expression;
 import gudusoft.gsqlparser.sql2xml.model.updatability_clause;
 import gudusoft.gsqlparser.sql2xml.model.update_of_clause;
 import gudusoft.gsqlparser.sql2xml.model.update_statement_searched;
@@ -154,13 +158,11 @@ public class AnsiGenerator implements SQL2XMLGenerator
 			TSelectSqlStatement select,
 			direct_select_statement_multiple_rows directSelectStatementMultipleRows )
 	{
-		cursor_specification cursorSpecification = new cursor_specification( );
-		directSelectStatementMultipleRows.setCursor_specification( cursorSpecification );
+		cursor_specification cursorSpecification = directSelectStatementMultipleRows.getCursor_specification( );
 
-		query_expression queryExpression = new query_expression( );
-		cursorSpecification.setQuery_expression( queryExpression );
+		query_expression queryExpression = cursorSpecification.getQuery_expression( );
 
-		convertQuery2Model( select, queryExpression );
+		convertSelectToQueryExpression( select, queryExpression );
 
 		if ( select.getOrderbyClause( ) != null )
 		{
@@ -179,7 +181,7 @@ public class AnsiGenerator implements SQL2XMLGenerator
 		}
 	}
 
-	private void convertQuery2Model( TSelectSqlStatement select,
+	private void convertSelectToQueryExpression( TSelectSqlStatement select,
 			query_expression queryExpression )
 	{
 		if ( select.getCteList( ) != null )
@@ -189,13 +191,13 @@ public class AnsiGenerator implements SQL2XMLGenerator
 			convertWithClause2Model( select.getCteList( ), withClause );
 		}
 
-		query_expression_body queryExpreesionBody = new query_expression_body( );
-		queryExpression.setQuery_expression_body( queryExpreesionBody );
+		query_expression_body queryExpreesionBody = queryExpression.getQuery_expression_body( );
 
-		convertQueryBody2Model( select, queryExpreesionBody );
+		convertSelectToQueryExpressionBody( select, queryExpreesionBody );
 	}
 
-	private void convertQueryBody2Model( TSelectSqlStatement select,
+	private void convertSelectToQueryExpressionBody(
+			TSelectSqlStatement select,
 			query_expression_body queryExpreesionBody )
 	{
 
@@ -204,80 +206,118 @@ public class AnsiGenerator implements SQL2XMLGenerator
 		{
 			query_expression_body_union queryExpreesionBodyUnion = new query_expression_body_union( );
 			queryExpreesionBody.setQuery_expression_body_union( queryExpreesionBodyUnion );
-			convertUnionQuery2Model( select, queryExpreesionBodyUnion );
+			convertSelectToQueryExpreesionBodyUnion( select,
+					queryExpreesionBodyUnion );
 		}
 		else if ( select.getSetOperator( ) == TSelectSqlStatement.setOperator_except
 				|| select.getSetOperator( ) == TSelectSqlStatement.setOperator_exceptall )
 		{
 			query_expression_body_except queryExpreesionBodyExcept = new query_expression_body_except( );
 			queryExpreesionBody.setQuery_expression_body_except( queryExpreesionBodyExcept );
-			convertExceptQuery2Model( select, queryExpreesionBodyExcept );
+			convertSelectToQueryExpreesionBodyExcept( select,
+					queryExpreesionBodyExcept );
 		}
 		else
 		{
 			query_term queryTerm = new query_term( );
 			queryExpreesionBody.setQuery_term( queryTerm );
-			convertSimpleOrIntersectQuery2Model( select, queryTerm );
+			convertSelectToQueryTerm( select, queryTerm );
 		}
 	}
 
-	private void convertSimpleOrIntersectQuery2Model(
-			TSelectSqlStatement select, query_term queryTerm )
+	private void convertSelectToQueryTerm( TSelectSqlStatement select,
+			query_term queryTerm )
 	{
 		if ( select.getSetOperator( ) == TSelectSqlStatement.setOperator_intersect
 				|| select.getSetOperator( ) == TSelectSqlStatement.setOperator_intersectall )
 		{
 			query_expression_body_intersect queryExpreesionBodyIntersect = new query_expression_body_intersect( );
 			queryTerm.setQuery_expression_body_intersect( queryExpreesionBodyIntersect );
-			convertIntersectQuery2Model( select, queryExpreesionBodyIntersect );
+			convertSelectToQueryExpressionBodyIntersect( select,
+					queryExpreesionBodyIntersect );
 		}
 		else
 		{
 			query_primary queryPrimary = new query_primary( );
 			queryTerm.setQuery_primary( queryPrimary );
-			convertSimpleQuery2Model( select, queryPrimary );
+			convertSelectToQueryPrimary( select, queryPrimary );
 		}
 	}
 
-	private void convertSimpleQuery2Model( TSelectSqlStatement select,
+	private void convertSelectToQueryPrimary( TSelectSqlStatement select,
 			query_primary queryPrimary )
 	{
 		if ( select.getSetOperator( ) == TSelectSqlStatement.setOperator_none )
 		{
 			simple_table simpleTable = new simple_table( );
 			queryPrimary.setSimple_table( simpleTable );
-			convertQueryTableToModel( select, simpleTable );
+			convertSelectToSimpleTable( select, simpleTable );
 		}
 		else
 		{
 			query_expression_body queryExpressionBody = new query_expression_body( );
 			queryPrimary.setQuery_expression_body( queryExpressionBody );
-			convertQueryBody2Model( select, queryExpressionBody );
+			convertSelectToQueryExpressionBody( select, queryExpressionBody );
 		}
 	}
 
-	private void convertQueryTableToModel( TSelectSqlStatement select,
+	private void convertSelectToSimpleTable( TSelectSqlStatement select,
 			simple_table simpleTable )
 	{
-		
-		
+		query_specification querySpecfication = new query_specification( );
+		simpleTable.setQuery_specification( querySpecfication );
+		convertSelectToQuerySpecification( select, querySpecfication );
 	}
 
-	private void convertIntersectQuery2Model( TSelectSqlStatement select,
+	private void convertSelectToQuerySpecification( TSelectSqlStatement select,
+			query_specification querySpecfication )
+	{
+		if ( select.getSelectDistinct( ) != null )
+		{
+			set_quantifier setQuantifier = new set_quantifier( );
+			querySpecfication.setSet_quantifier( setQuantifier );
+			setQuantifier.setKw_distinct( "distinct" );
+		}
+
+		select_list selectList = querySpecfication.getSelect_list( );
+		convertSelectToSelectList( select, selectList );
+
+		table_expression tableExpression = querySpecfication.getTable_expression( );
+		convertSelectToTableExpression( select, tableExpression );
+	}
+
+	private void convertSelectToTableExpression( TSelectSqlStatement select,
+			table_expression tableExpression )
+	{
+		// TODO Auto-generated method stub
+
+	}
+
+	private void convertSelectToSelectList( TSelectSqlStatement select,
+			select_list selectList )
+	{
+		// TODO Auto-generated method stub
+
+	}
+
+	private void convertSelectToQueryExpressionBodyIntersect(
+			TSelectSqlStatement select,
 			query_expression_body_intersect queryExpreesionBodyIntersect )
 	{
 		// TODO Auto-generated method stub
 
 	}
 
-	private void convertExceptQuery2Model( TSelectSqlStatement select,
+	private void convertSelectToQueryExpreesionBodyExcept(
+			TSelectSqlStatement select,
 			query_expression_body_except queryExpreesionBodyExcept )
 	{
 		// TODO Auto-generated method stub
 
 	}
 
-	private void convertUnionQuery2Model( TSelectSqlStatement select,
+	private void convertSelectToQueryExpreesionBodyUnion(
+			TSelectSqlStatement select,
 			query_expression_body_union queryExpreesionBodyUnion )
 	{
 		// TODO Auto-generated method stub
@@ -307,8 +347,7 @@ public class AnsiGenerator implements SQL2XMLGenerator
 			column_name_list columnNameList = new column_name_list( );
 			ofColumnNameList.setColumn_name_list( columnNameList );
 
-			List<column_name> columnNames = new ArrayList<column_name>( );
-			columnNameList.setColumn_name( columnNames );
+			List<column_name> columnNames = columnNameList.getColumn_name( );
 
 			for ( int i = 0; i < forUpdate.getColumnRefs( ).size( ); i++ )
 			{
@@ -329,8 +368,7 @@ public class AnsiGenerator implements SQL2XMLGenerator
 	private void convertObjectName2Model( TObjectName objectName,
 			identifier identifier )
 	{
-		actual_identifier actualIdentifier = new actual_identifier( );
-		identifier.setActual_identifier( actualIdentifier );
+		actual_identifier actualIdentifier = identifier.getActual_identifier( );
 
 		String word = objectName.toString( );
 		if ( word.startsWith( "\"" ) && word.endsWith( "\"" ) )
@@ -364,8 +402,7 @@ public class AnsiGenerator implements SQL2XMLGenerator
 
 			sort_specifications.add( sortSpecification );
 
-			sort_key sortKey = new sort_key( );
-			sortSpecification.setSort_key( sortKey );
+			sort_key sortKey = sortSpecification.getSort_key( );
 
 			if ( item.getSortType( ) == TBaseType.srtAsc )
 			{
@@ -378,8 +415,7 @@ public class AnsiGenerator implements SQL2XMLGenerator
 				sortSpecification.setOrdering_specification( orderingSpecification );
 			}
 
-			value_expression valueExpression = new value_expression( );
-			sortKey.setValue_expression( valueExpression );
+			value_expression valueExpression = sortKey.getValue_expression( );
 
 			convertExpression2Model( item.getSortKey( ), valueExpression );
 		}
