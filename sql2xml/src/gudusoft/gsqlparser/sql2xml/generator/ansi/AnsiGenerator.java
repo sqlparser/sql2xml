@@ -9,10 +9,14 @@ import gudusoft.gsqlparser.TStatementList;
 import gudusoft.gsqlparser.nodes.TCTEList;
 import gudusoft.gsqlparser.nodes.TExpression;
 import gudusoft.gsqlparser.nodes.TForUpdate;
+import gudusoft.gsqlparser.nodes.TJoin;
+import gudusoft.gsqlparser.nodes.TJoinItem;
+import gudusoft.gsqlparser.nodes.TJoinItemList;
 import gudusoft.gsqlparser.nodes.TObjectName;
 import gudusoft.gsqlparser.nodes.TOrderBy;
 import gudusoft.gsqlparser.nodes.TOrderByItem;
 import gudusoft.gsqlparser.nodes.TOrderByItemList;
+import gudusoft.gsqlparser.nodes.TTable;
 import gudusoft.gsqlparser.sql2xml.generator.SQL2XMLGenerator;
 import gudusoft.gsqlparser.sql2xml.model.actual_identifier;
 import gudusoft.gsqlparser.sql2xml.model.column_name;
@@ -46,6 +50,8 @@ import gudusoft.gsqlparser.sql2xml.model.sort_key;
 import gudusoft.gsqlparser.sql2xml.model.sort_specification;
 import gudusoft.gsqlparser.sql2xml.model.sort_specification_list;
 import gudusoft.gsqlparser.sql2xml.model.table_expression;
+import gudusoft.gsqlparser.sql2xml.model.table_factor;
+import gudusoft.gsqlparser.sql2xml.model.table_primary;
 import gudusoft.gsqlparser.sql2xml.model.table_reference;
 import gudusoft.gsqlparser.sql2xml.model.updatability_clause;
 import gudusoft.gsqlparser.sql2xml.model.update_of_clause;
@@ -293,7 +299,43 @@ public class AnsiGenerator implements SQL2XMLGenerator
 	{
 		from_clause from_clause = tableExpression.getFrom_clause( );
 		List<table_reference> tableReferences = from_clause.getTable_reference( );
+		for ( int i = 0; i < select.joins.size( ); i++ )
+		{
+			table_reference tableReference = new table_reference( );
+			tableReferences.add( tableReference );
+			TJoin join = select.joins.getJoin( i );
+			TTable table = join.getTable( );
+			TJoinItemList items = join.getJoinItems( );
+			if ( items != null )
+			{
+				for ( int j = 0; j < items.size( ); j++ )
+				{
+					TJoinItem item = items.getJoinItem( j );
+					TTable joinTable = item.getTable( );
+				}
+				// TODO Auto-generated method stub
+			}
+			else
+			{
+				table_factor tableFactor = new table_factor( );
+				tableReference.setTable_factor( tableFactor );
+				convertTableToTableFactor( table, tableFactor );
+			}
+		}
+	}
+
+	private void convertTableToTableFactor( TTable table,
+			table_factor tableFactor )
+	{
+		table_primary tablePrimary = tableFactor.getTable_primary( );
+		convertTableToTablePrimary( table, tablePrimary );
+	}
+
+	private void convertTableToTablePrimary( TTable table,
+			table_primary tablePrimary )
+	{
 		// TODO Auto-generated method stub
+		
 	}
 
 	private void convertSelectToSelectList( TSelectSqlStatement select,
