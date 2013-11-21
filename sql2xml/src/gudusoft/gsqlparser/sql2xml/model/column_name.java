@@ -7,16 +7,11 @@ public class column_name
 {
 
 	@Element
-	private identifier identifier;
+	private identifier identifier = new identifier( );
 
 	public identifier getIdentifier( )
 	{
 		return identifier;
-	}
-
-	public void setIdentifier( identifier identifier )
-	{
-		this.identifier = identifier;
 	}
 
 }

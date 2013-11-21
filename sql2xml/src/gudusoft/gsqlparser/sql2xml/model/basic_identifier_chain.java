@@ -7,5 +7,11 @@ public class basic_identifier_chain
 {
 
 	@Element
-	private identifier_chain identifier_chain;
+	private identifier_chain identifier_chain = new identifier_chain( );
+
+	public identifier_chain getIdentifier_chain( )
+	{
+		return identifier_chain;
+	}
+
 }

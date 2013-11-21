@@ -23,6 +23,7 @@ import gudusoft.gsqlparser.sql2xml.model.delimited_identifier;
 import gudusoft.gsqlparser.sql2xml.model.direct_select_statement_multiple_rows;
 import gudusoft.gsqlparser.sql2xml.model.direct_sql_data_statement;
 import gudusoft.gsqlparser.sql2xml.model.directly_executable_statement;
+import gudusoft.gsqlparser.sql2xml.model.from_clause;
 import gudusoft.gsqlparser.sql2xml.model.identifier;
 import gudusoft.gsqlparser.sql2xml.model.insert_statement;
 import gudusoft.gsqlparser.sql2xml.model.merge_statement;
@@ -45,6 +46,7 @@ import gudusoft.gsqlparser.sql2xml.model.sort_key;
 import gudusoft.gsqlparser.sql2xml.model.sort_specification;
 import gudusoft.gsqlparser.sql2xml.model.sort_specification_list;
 import gudusoft.gsqlparser.sql2xml.model.table_expression;
+import gudusoft.gsqlparser.sql2xml.model.table_reference;
 import gudusoft.gsqlparser.sql2xml.model.updatability_clause;
 import gudusoft.gsqlparser.sql2xml.model.update_of_clause;
 import gudusoft.gsqlparser.sql2xml.model.update_statement_searched;
@@ -289,8 +291,9 @@ public class AnsiGenerator implements SQL2XMLGenerator
 	private void convertSelectToTableExpression( TSelectSqlStatement select,
 			table_expression tableExpression )
 	{
+		from_clause from_clause = tableExpression.getFrom_clause( );
+		List<table_reference> tableReferences = from_clause.getTable_reference( );
 		// TODO Auto-generated method stub
-
 	}
 
 	private void convertSelectToSelectList( TSelectSqlStatement select,
@@ -356,10 +359,7 @@ public class AnsiGenerator implements SQL2XMLGenerator
 
 				column_name columnName = new column_name( );
 				columnNames.add( columnName );
-
-				identifier identifier = new identifier( );
-				columnName.setIdentifier( identifier );
-
+				identifier identifier = columnName.getIdentifier( );
 				convertObjectName2Model( column, identifier );
 			}
 		}
