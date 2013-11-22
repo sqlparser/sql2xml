@@ -5,7 +5,9 @@ import gudusoft.gsqlparser.EDbVendor;
 import gudusoft.gsqlparser.TBaseType;
 import gudusoft.gsqlparser.TCustomSqlStatement;
 import gudusoft.gsqlparser.TGSqlParser;
+import gudusoft.gsqlparser.TSourceToken;
 import gudusoft.gsqlparser.TStatementList;
+import gudusoft.gsqlparser.nodes.TAliasClause;
 import gudusoft.gsqlparser.nodes.TCTEList;
 import gudusoft.gsqlparser.nodes.TExpression;
 import gudusoft.gsqlparser.nodes.TForUpdate;
@@ -19,19 +21,26 @@ import gudusoft.gsqlparser.nodes.TOrderByItemList;
 import gudusoft.gsqlparser.nodes.TTable;
 import gudusoft.gsqlparser.sql2xml.generator.SQL2XMLGenerator;
 import gudusoft.gsqlparser.sql2xml.model.actual_identifier;
+import gudusoft.gsqlparser.sql2xml.model.collection_derived_table_as_correction_name;
 import gudusoft.gsqlparser.sql2xml.model.column_name;
 import gudusoft.gsqlparser.sql2xml.model.column_name_list;
+import gudusoft.gsqlparser.sql2xml.model.correlation_name_with_derived_column_list;
 import gudusoft.gsqlparser.sql2xml.model.cursor_specification;
 import gudusoft.gsqlparser.sql2xml.model.delete_statement_searched;
 import gudusoft.gsqlparser.sql2xml.model.delimited_identifier;
+import gudusoft.gsqlparser.sql2xml.model.derived_table_as_correlation_name;
 import gudusoft.gsqlparser.sql2xml.model.direct_select_statement_multiple_rows;
 import gudusoft.gsqlparser.sql2xml.model.direct_sql_data_statement;
 import gudusoft.gsqlparser.sql2xml.model.directly_executable_statement;
 import gudusoft.gsqlparser.sql2xml.model.from_clause;
 import gudusoft.gsqlparser.sql2xml.model.identifier;
 import gudusoft.gsqlparser.sql2xml.model.insert_statement;
+import gudusoft.gsqlparser.sql2xml.model.lateral_derived_table_as_correlation_name;
+import gudusoft.gsqlparser.sql2xml.model.local_or_schema_qualified_name;
+import gudusoft.gsqlparser.sql2xml.model.local_or_schema_qualifier;
 import gudusoft.gsqlparser.sql2xml.model.merge_statement;
 import gudusoft.gsqlparser.sql2xml.model.of_column_name_list;
+import gudusoft.gsqlparser.sql2xml.model.only_spec_as_correction_name;
 import gudusoft.gsqlparser.sql2xml.model.order_by_clause;
 import gudusoft.gsqlparser.sql2xml.model.ordering_specification;
 import gudusoft.gsqlparser.sql2xml.model.query_expression;
@@ -43,6 +52,7 @@ import gudusoft.gsqlparser.sql2xml.model.query_primary;
 import gudusoft.gsqlparser.sql2xml.model.query_specification;
 import gudusoft.gsqlparser.sql2xml.model.query_term;
 import gudusoft.gsqlparser.sql2xml.model.read_only_or_update_of;
+import gudusoft.gsqlparser.sql2xml.model.schema_name;
 import gudusoft.gsqlparser.sql2xml.model.select_list;
 import gudusoft.gsqlparser.sql2xml.model.set_quantifier;
 import gudusoft.gsqlparser.sql2xml.model.simple_table;
@@ -51,6 +61,10 @@ import gudusoft.gsqlparser.sql2xml.model.sort_specification;
 import gudusoft.gsqlparser.sql2xml.model.sort_specification_list;
 import gudusoft.gsqlparser.sql2xml.model.table_expression;
 import gudusoft.gsqlparser.sql2xml.model.table_factor;
+import gudusoft.gsqlparser.sql2xml.model.table_function_derived_table_as_correction_name;
+import gudusoft.gsqlparser.sql2xml.model.table_name;
+import gudusoft.gsqlparser.sql2xml.model.table_or_query_name;
+import gudusoft.gsqlparser.sql2xml.model.table_or_query_name_as_correlation_name;
 import gudusoft.gsqlparser.sql2xml.model.table_primary;
 import gudusoft.gsqlparser.sql2xml.model.table_reference;
 import gudusoft.gsqlparser.sql2xml.model.updatability_clause;
@@ -333,6 +347,97 @@ public class AnsiGenerator implements SQL2XMLGenerator
 
 	private void convertTableToTablePrimary( TTable table,
 			table_primary tablePrimary )
+	{
+		TSourceToken sourceToken = SourceTokenSearcher.firstNotWhitespaceAndReturnToken( table.getStartToken( ).container,
+				table.getStartToken( ).posinlist,
+				table.getEndToken( ).posinlist );
+
+		if ( sourceToken.astext.equalsIgnoreCase( "lateral" ) )
+		{
+			lateral_derived_table_as_correlation_name lateralDerivedTable = new lateral_derived_table_as_correlation_name( );
+			tablePrimary.setLateral_derived_table_as_correlation_name( lateralDerivedTable );
+		}
+		else if ( sourceToken.astext.equalsIgnoreCase( "unnest" ) )
+		{
+			collection_derived_table_as_correction_name collectionDerivedTable = new collection_derived_table_as_correction_name( );
+			tablePrimary.setCollection_derived_table_as_correction_name( collectionDerivedTable );
+		}
+		else if ( sourceToken.astext.equalsIgnoreCase( "table" ) )
+		{
+			table_function_derived_table_as_correction_name tableFunctionDerivedTable = new table_function_derived_table_as_correction_name( );
+			tablePrimary.setTable_function_derived_table_as_correction_name( tableFunctionDerivedTable );
+		}
+		else if ( sourceToken.astext.equalsIgnoreCase( "only" ) )
+		{
+			only_spec_as_correction_name onlySpecTable = new only_spec_as_correction_name( );
+			tablePrimary.setOnly_spec_as_correction_name( onlySpecTable );
+		}
+		else if ( table.subquery == null )
+		{
+			table_or_query_name_as_correlation_name normalTypeTable = new table_or_query_name_as_correlation_name( );
+			tablePrimary.setTable_or_query_name_as_correlation_name( normalTypeTable );
+			convertTableToNormalTableModel( table, normalTypeTable );
+		}
+		else
+		{
+			derived_table_as_correlation_name derivedTable = new derived_table_as_correlation_name( );
+			tablePrimary.setDerived_table_as_correlation_name( derivedTable );
+			convertTableToDerivedTableModel( table, derivedTable );
+		}
+	}
+
+	private void convertTableToDerivedTableModel( TTable table,
+			derived_table_as_correlation_name derivedTable )
+	{
+		// TODO Auto-generated method stub
+
+	}
+
+	private void convertTableToNormalTableModel( TTable table,
+			table_or_query_name_as_correlation_name normalTypeTable )
+	{
+		table_or_query_name tableOrQueryName = normalTypeTable.getTable_or_query_name( );
+
+		table_name tableName = new table_name( );
+		tableOrQueryName.setTable_name( tableName );
+		convertTableNameToModel( table.getTableName( ), tableName );
+
+		if ( table.getAliasClause( ) != null )
+		{
+			correlation_name_with_derived_column_list correlationName = new correlation_name_with_derived_column_list( );
+			normalTypeTable.setCorrelation_name_with_derived_column_list( correlationName );
+			convertTableNameAliasToModel( table.getAliasClause( ),
+					correlationName );
+		}
+	}
+
+	private void convertTableNameAliasToModel( TAliasClause aliasClause,
+			correlation_name_with_derived_column_list correlationName )
+	{
+		// TODO Auto-generated method stub
+
+	}
+
+	private void convertTableNameToModel( TObjectName tableName,
+			table_name tableNameModel )
+	{
+		local_or_schema_qualified_name tableQualifiedNameModel =  tableNameModel.getLocal_or_schema_qualified_name( );
+		if ( tableName.getSchemaString( ) != null )
+		{
+			local_or_schema_qualifier schemaQulifier = new local_or_schema_qualifier( );
+			tableQualifiedNameModel.setLocal_or_schema_qualifier( schemaQulifier );
+			
+			schema_name schemaName = new schema_name( );
+			schemaQulifier.setSchema_name( schemaName );
+		}
+		
+		actual_identifier actualIdentifier = tableQualifiedNameModel.getQualified_identifier( ).getIdentifier( ).getActual_identifier( );
+		convertTableIdentifierToModel( tableName.getObjectString( ),
+				actualIdentifier );
+	}
+
+	private void convertTableIdentifierToModel( String objectString,
+			actual_identifier actualIdentifier )
 	{
 		// TODO Auto-generated method stub
 		
