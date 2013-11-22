@@ -21,6 +21,7 @@ import gudusoft.gsqlparser.nodes.TOrderByItemList;
 import gudusoft.gsqlparser.nodes.TTable;
 import gudusoft.gsqlparser.sql2xml.generator.SQL2XMLGenerator;
 import gudusoft.gsqlparser.sql2xml.model.actual_identifier;
+import gudusoft.gsqlparser.sql2xml.model.catalog_name;
 import gudusoft.gsqlparser.sql2xml.model.collection_derived_table_as_correction_name;
 import gudusoft.gsqlparser.sql2xml.model.column_name;
 import gudusoft.gsqlparser.sql2xml.model.column_name_list;
@@ -67,6 +68,7 @@ import gudusoft.gsqlparser.sql2xml.model.table_or_query_name;
 import gudusoft.gsqlparser.sql2xml.model.table_or_query_name_as_correlation_name;
 import gudusoft.gsqlparser.sql2xml.model.table_primary;
 import gudusoft.gsqlparser.sql2xml.model.table_reference;
+import gudusoft.gsqlparser.sql2xml.model.unicode_delimited_identifier;
 import gudusoft.gsqlparser.sql2xml.model.updatability_clause;
 import gudusoft.gsqlparser.sql2xml.model.update_of_clause;
 import gudusoft.gsqlparser.sql2xml.model.update_statement_searched;
@@ -389,7 +391,12 @@ public class AnsiGenerator implements SQL2XMLGenerator
 	private void convertTableToDerivedTableModel( TTable table,
 			derived_table_as_correlation_name derivedTable )
 	{
-		// TODO Auto-generated method stub
+		convertSelectToQueryExpressionBody( table.getSubquery( ),
+				derivedTable.getDerived_table( )
+						.getTable_subquery( )
+						.getSubquery( )
+						.getQuery_expression( )
+						.getQuery_expression_body( ) );
 
 	}
 
@@ -414,33 +421,77 @@ public class AnsiGenerator implements SQL2XMLGenerator
 	private void convertTableNameAliasToModel( TAliasClause aliasClause,
 			correlation_name_with_derived_column_list correlationName )
 	{
-		// TODO Auto-generated method stub
+		if ( aliasClause.getAsToken( ) != null )
+		{
+			correlationName.setKw_as( "as" );
+		}
 
+		convertIdentifierToModel( aliasClause.getAliasName( ).toString( ),
+				correlationName.getCorrelation_name( )
+						.getIdentifier( )
+						.getActual_identifier( ) );
 	}
 
 	private void convertTableNameToModel( TObjectName tableName,
 			table_name tableNameModel )
 	{
-		local_or_schema_qualified_name tableQualifiedNameModel =  tableNameModel.getLocal_or_schema_qualified_name( );
+		local_or_schema_qualified_name tableQualifiedNameModel = tableNameModel.getLocal_or_schema_qualified_name( );
 		if ( tableName.getSchemaString( ) != null )
 		{
 			local_or_schema_qualifier schemaQulifier = new local_or_schema_qualifier( );
 			tableQualifiedNameModel.setLocal_or_schema_qualifier( schemaQulifier );
-			
+
 			schema_name schemaName = new schema_name( );
 			schemaQulifier.setSchema_name( schemaName );
+			convertSchemaToModel( tableName, schemaName );
 		}
-		
-		actual_identifier actualIdentifier = tableQualifiedNameModel.getQualified_identifier( ).getIdentifier( ).getActual_identifier( );
-		convertTableIdentifierToModel( tableName.getObjectString( ),
+
+		actual_identifier actualIdentifier = tableQualifiedNameModel.getQualified_identifier( )
+				.getIdentifier( )
+				.getActual_identifier( );
+		convertIdentifierToModel( tableName.getObjectString( ),
 				actualIdentifier );
 	}
 
-	private void convertTableIdentifierToModel( String objectString,
+	private void convertSchemaToModel( TObjectName name, schema_name schemaName )
+	{
+		if ( name.getPartString( ) != null )
+		{
+			catalog_name catalogName = new catalog_name( );
+			schemaName.setCatalog_name( catalogName );
+
+			convertIdentifierToModel( name.getSchemaString( ),
+					catalogName.getIdentifier( ).getActual_identifier( ) );
+		}
+
+		convertIdentifierToModel( name.getSchemaString( ),
+				schemaName.getUnqualified_schema_name( )
+						.getIdentifier( )
+						.getActual_identifier( ) );
+	}
+
+	private void convertIdentifierToModel( String tableName,
 			actual_identifier actualIdentifier )
 	{
-		// TODO Auto-generated method stub
-		
+		if ( tableName.startsWith( "&" ) )
+		{
+			unicode_delimited_identifier identifier = new unicode_delimited_identifier( );
+			actualIdentifier.setUnicode_delimited_identifier( identifier );
+			identifier.setUnicode_delimiter_body( tableName.substring( 2,
+					tableName.length( ) - 1 ) );
+		}
+		else if ( ( tableName.startsWith( "\"" ) && tableName.endsWith( "\"" ) )
+				|| ( tableName.startsWith( "'" ) && tableName.endsWith( "'" ) ) )
+		{
+			delimited_identifier identifier = new delimited_identifier( );
+			actualIdentifier.setDelimited_identifier( identifier );
+			identifier.setDelimited_identifier_body( tableName.substring( 1,
+					tableName.length( ) - 1 ) );
+		}
+		else
+		{
+			actualIdentifier.setRegular_identifier( tableName );
+		}
 	}
 
 	private void convertSelectToSelectList( TSelectSqlStatement select,

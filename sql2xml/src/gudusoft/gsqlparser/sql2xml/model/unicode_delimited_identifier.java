@@ -20,4 +20,26 @@ public class unicode_delimited_identifier
 
 	@Element(required = false)
 	private unicode_escape_specifier unicode_escape_specifier;
+
+	public String getUnicode_delimiter_body( )
+	{
+		return unicode_delimiter_body;
+	}
+
+	public void setUnicode_delimiter_body( String unicode_delimiter_body )
+	{
+		this.unicode_delimiter_body = unicode_delimiter_body;
+	}
+
+	public unicode_escape_specifier getUnicode_escape_specifier( )
+	{
+		return unicode_escape_specifier;
+	}
+
+	public void setUnicode_escape_specifier(
+			unicode_escape_specifier unicode_escape_specifier )
+	{
+		this.unicode_escape_specifier = unicode_escape_specifier;
+	}
+
 }
