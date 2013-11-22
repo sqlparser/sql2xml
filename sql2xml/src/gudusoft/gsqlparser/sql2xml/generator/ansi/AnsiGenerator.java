@@ -391,12 +391,11 @@ public class AnsiGenerator implements SQL2XMLGenerator
 	private void convertTableToDerivedTableModel( TTable table,
 			derived_table_as_correlation_name derivedTable )
 	{
-		convertSelectToQueryExpressionBody( table.getSubquery( ),
+		convertSelectToQueryExpression( table.getSubquery( ),
 				derivedTable.getDerived_table( )
 						.getTable_subquery( )
 						.getSubquery( )
-						.getQuery_expression( )
-						.getQuery_expression_body( ) );
+						.getQuery_expression( ) );
 
 	}
 
