@@ -18,9 +18,11 @@ import gudusoft.gsqlparser.nodes.TObjectName;
 import gudusoft.gsqlparser.nodes.TOrderBy;
 import gudusoft.gsqlparser.nodes.TOrderByItem;
 import gudusoft.gsqlparser.nodes.TOrderByItemList;
+import gudusoft.gsqlparser.nodes.TResultColumn;
 import gudusoft.gsqlparser.nodes.TTable;
 import gudusoft.gsqlparser.sql2xml.generator.SQL2XMLGenerator;
 import gudusoft.gsqlparser.sql2xml.model.actual_identifier;
+import gudusoft.gsqlparser.sql2xml.model.as_clause;
 import gudusoft.gsqlparser.sql2xml.model.catalog_name;
 import gudusoft.gsqlparser.sql2xml.model.collection_derived_table_as_correction_name;
 import gudusoft.gsqlparser.sql2xml.model.column_name;
@@ -29,6 +31,7 @@ import gudusoft.gsqlparser.sql2xml.model.correlation_name_with_derived_column_li
 import gudusoft.gsqlparser.sql2xml.model.cursor_specification;
 import gudusoft.gsqlparser.sql2xml.model.delete_statement_searched;
 import gudusoft.gsqlparser.sql2xml.model.delimited_identifier;
+import gudusoft.gsqlparser.sql2xml.model.derived_column;
 import gudusoft.gsqlparser.sql2xml.model.derived_table_as_correlation_name;
 import gudusoft.gsqlparser.sql2xml.model.direct_select_statement_multiple_rows;
 import gudusoft.gsqlparser.sql2xml.model.direct_sql_data_statement;
@@ -44,6 +47,7 @@ import gudusoft.gsqlparser.sql2xml.model.of_column_name_list;
 import gudusoft.gsqlparser.sql2xml.model.only_spec_as_correction_name;
 import gudusoft.gsqlparser.sql2xml.model.order_by_clause;
 import gudusoft.gsqlparser.sql2xml.model.ordering_specification;
+import gudusoft.gsqlparser.sql2xml.model.qualified_asterisk;
 import gudusoft.gsqlparser.sql2xml.model.query_expression;
 import gudusoft.gsqlparser.sql2xml.model.query_expression_body;
 import gudusoft.gsqlparser.sql2xml.model.query_expression_body_except;
@@ -55,6 +59,7 @@ import gudusoft.gsqlparser.sql2xml.model.query_term;
 import gudusoft.gsqlparser.sql2xml.model.read_only_or_update_of;
 import gudusoft.gsqlparser.sql2xml.model.schema_name;
 import gudusoft.gsqlparser.sql2xml.model.select_list;
+import gudusoft.gsqlparser.sql2xml.model.select_sublist;
 import gudusoft.gsqlparser.sql2xml.model.set_quantifier;
 import gudusoft.gsqlparser.sql2xml.model.simple_table;
 import gudusoft.gsqlparser.sql2xml.model.sort_key;
@@ -495,6 +500,66 @@ public class AnsiGenerator implements SQL2XMLGenerator
 
 	private void convertSelectToSelectList( TSelectSqlStatement select,
 			select_list selectList )
+	{
+		if ( select.getResultColumnList( ).size( ) == 1
+				&& select.getResultColumnList( ).toString( ).equals( "*" ) )
+		{
+			selectList.setAsterisk( "*" );
+		}
+		else
+		{
+			List<select_sublist> selectSublist = new ArrayList<select_sublist>( );
+			for ( int i = 0; i < select.getResultColumnList( ).size( ); i++ )
+			{
+				TResultColumn column = select.getResultColumnList( )
+						.getResultColumn( i );
+				select_sublist sublist = new select_sublist( );
+				TExpression expression = column.getExpr( );
+				switch ( expression.getExpressionType( ) )
+				{
+					case simple_object_name_t :
+						qualified_asterisk qualifiedAsterisk = new qualified_asterisk( );
+						sublist.setQualified_asterisk( qualifiedAsterisk );
+						convertColumnToQualifiedAsterisk( column,
+								qualifiedAsterisk );
+						break;
+					default :
+						derived_column derivedColumn = new derived_column( );
+						sublist.setDerived_column( derivedColumn );
+						convertColumnToDerivedColumn( column, derivedColumn );
+				}
+			}
+		}
+	}
+
+	private void convertColumnToDerivedColumn( TResultColumn column,
+			derived_column derivedColumn )
+	{
+		convertExpression2Model( column.getExpr( ),
+				derivedColumn.getValue_expression( ) );
+
+		if ( column.getAliasClause( ) != null )
+		{
+			as_clause asClause = new as_clause( );
+			derivedColumn.setAs_clause( asClause );
+			convertAliasToModel( column.getAliasClause( ), asClause );
+		}
+	}
+
+	private void convertAliasToModel( TAliasClause aliasClause,
+			as_clause asClause )
+	{
+		if ( aliasClause.getAsToken( ) != null )
+		{
+			asClause.setKw_as( "as" );
+		}
+
+		convertObjectName2Model( aliasClause.getAliasName( ),
+				asClause.getColumn_name( ).getIdentifier( ) );
+	}
+
+	private void convertColumnToQualifiedAsterisk( TResultColumn column,
+			qualified_asterisk qualifiedAsterisk )
 	{
 		// TODO Auto-generated method stub
 
