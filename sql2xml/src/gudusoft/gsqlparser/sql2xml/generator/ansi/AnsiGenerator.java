@@ -2,6 +2,7 @@
 package gudusoft.gsqlparser.sql2xml.generator.ansi;
 
 import gudusoft.gsqlparser.EDbVendor;
+import gudusoft.gsqlparser.EExpressionType;
 import gudusoft.gsqlparser.TBaseType;
 import gudusoft.gsqlparser.TCustomSqlStatement;
 import gudusoft.gsqlparser.TGSqlParser;
@@ -27,6 +28,7 @@ import gudusoft.gsqlparser.sql2xml.model.catalog_name;
 import gudusoft.gsqlparser.sql2xml.model.collection_derived_table_as_correction_name;
 import gudusoft.gsqlparser.sql2xml.model.column_name;
 import gudusoft.gsqlparser.sql2xml.model.column_name_list;
+import gudusoft.gsqlparser.sql2xml.model.common_value_expression;
 import gudusoft.gsqlparser.sql2xml.model.correlation_name_with_derived_column_list;
 import gudusoft.gsqlparser.sql2xml.model.cursor_specification;
 import gudusoft.gsqlparser.sql2xml.model.delete_statement_searched;
@@ -36,6 +38,7 @@ import gudusoft.gsqlparser.sql2xml.model.derived_table_as_correlation_name;
 import gudusoft.gsqlparser.sql2xml.model.direct_select_statement_multiple_rows;
 import gudusoft.gsqlparser.sql2xml.model.direct_sql_data_statement;
 import gudusoft.gsqlparser.sql2xml.model.directly_executable_statement;
+import gudusoft.gsqlparser.sql2xml.model.factor;
 import gudusoft.gsqlparser.sql2xml.model.from_clause;
 import gudusoft.gsqlparser.sql2xml.model.identifier;
 import gudusoft.gsqlparser.sql2xml.model.insert_statement;
@@ -43,10 +46,15 @@ import gudusoft.gsqlparser.sql2xml.model.lateral_derived_table_as_correlation_na
 import gudusoft.gsqlparser.sql2xml.model.local_or_schema_qualified_name;
 import gudusoft.gsqlparser.sql2xml.model.local_or_schema_qualifier;
 import gudusoft.gsqlparser.sql2xml.model.merge_statement;
+import gudusoft.gsqlparser.sql2xml.model.minus;
+import gudusoft.gsqlparser.sql2xml.model.numeric_primary;
+import gudusoft.gsqlparser.sql2xml.model.numeric_value_expression;
+import gudusoft.gsqlparser.sql2xml.model.numeric_value_function;
 import gudusoft.gsqlparser.sql2xml.model.of_column_name_list;
 import gudusoft.gsqlparser.sql2xml.model.only_spec_as_correction_name;
 import gudusoft.gsqlparser.sql2xml.model.order_by_clause;
 import gudusoft.gsqlparser.sql2xml.model.ordering_specification;
+import gudusoft.gsqlparser.sql2xml.model.plus;
 import gudusoft.gsqlparser.sql2xml.model.qualified_asterisk;
 import gudusoft.gsqlparser.sql2xml.model.query_expression;
 import gudusoft.gsqlparser.sql2xml.model.query_expression_body;
@@ -61,6 +69,7 @@ import gudusoft.gsqlparser.sql2xml.model.schema_name;
 import gudusoft.gsqlparser.sql2xml.model.select_list;
 import gudusoft.gsqlparser.sql2xml.model.select_sublist;
 import gudusoft.gsqlparser.sql2xml.model.set_quantifier;
+import gudusoft.gsqlparser.sql2xml.model.sign;
 import gudusoft.gsqlparser.sql2xml.model.simple_table;
 import gudusoft.gsqlparser.sql2xml.model.sort_key;
 import gudusoft.gsqlparser.sql2xml.model.sort_specification;
@@ -73,11 +82,15 @@ import gudusoft.gsqlparser.sql2xml.model.table_or_query_name;
 import gudusoft.gsqlparser.sql2xml.model.table_or_query_name_as_correlation_name;
 import gudusoft.gsqlparser.sql2xml.model.table_primary;
 import gudusoft.gsqlparser.sql2xml.model.table_reference;
+import gudusoft.gsqlparser.sql2xml.model.term;
+import gudusoft.gsqlparser.sql2xml.model.term_asterisk_factor;
+import gudusoft.gsqlparser.sql2xml.model.term_solidus_factor;
 import gudusoft.gsqlparser.sql2xml.model.unicode_delimited_identifier;
 import gudusoft.gsqlparser.sql2xml.model.updatability_clause;
 import gudusoft.gsqlparser.sql2xml.model.update_of_clause;
 import gudusoft.gsqlparser.sql2xml.model.update_statement_searched;
 import gudusoft.gsqlparser.sql2xml.model.value_expression;
+import gudusoft.gsqlparser.sql2xml.model.value_expression_primary;
 import gudusoft.gsqlparser.sql2xml.model.with_clause;
 import gudusoft.gsqlparser.stmt.TDeleteSqlStatement;
 import gudusoft.gsqlparser.stmt.TInsertSqlStatement;
@@ -509,11 +522,13 @@ public class AnsiGenerator implements SQL2XMLGenerator
 		else
 		{
 			List<select_sublist> selectSublist = new ArrayList<select_sublist>( );
+			selectList.setSelect_sublist( selectSublist );
 			for ( int i = 0; i < select.getResultColumnList( ).size( ); i++ )
 			{
 				TResultColumn column = select.getResultColumnList( )
 						.getResultColumn( i );
 				select_sublist sublist = new select_sublist( );
+				selectSublist.add( sublist );
 				TExpression expression = column.getExpr( );
 				switch ( expression.getExpressionType( ) )
 				{
@@ -687,8 +702,198 @@ public class AnsiGenerator implements SQL2XMLGenerator
 	private void convertExpression2Model( TExpression expression,
 			value_expression valueExpression )
 	{
+		switch ( expression.getExpressionType( ) )
+		{
+			default :
+				common_value_expression commonValueExpression = new common_value_expression( );
+				valueExpression.setCommon_value_expression( commonValueExpression );
+				convertExpressionToCommonValueExpression( expression,
+						commonValueExpression );
+		}
+	}
+
+	private void convertExpressionToCommonValueExpression(
+			TExpression expression,
+			common_value_expression commonValueExpression )
+	{
+		if ( isNumericValueExpression( expression ) )
+		{
+			numeric_value_expression numericValueExpression = new numeric_value_expression( );
+			commonValueExpression.setNumeric_value_expression( numericValueExpression );
+			convertExpressionToNumericValueExpression( expression,
+					numericValueExpression );
+		}
+
+	}
+
+	private void convertExpressionToNumericValueExpression(
+			TExpression expression,
+			numeric_value_expression numericValueExpression )
+	{
+		if ( expression.getExpressionType( ) == EExpressionType.arithmetic_plus_t )
+		{
+			plus plus = new plus( );
+			numericValueExpression.setPlus( plus );
+			convertExpressionToPlus( expression, plus );
+		}
+		else if ( expression.getExpressionType( ) == EExpressionType.arithmetic_minus_t )
+		{
+			minus minus = new minus( );
+			numericValueExpression.setMinus( minus );
+			convertExpressionToMinus( expression, minus );
+		}
+		else
+		{
+			term term = new term( );
+			numericValueExpression.setTerm( term );
+			convertExpressionToTerm( expression, term );
+		}
+	}
+
+	private void convertExpressionToTerm( TExpression expression, term term )
+	{
+		if ( expression.getExpressionType( ) == EExpressionType.arithmetic_divide_t )
+		{
+			term_solidus_factor termSolidusFactor = new term_solidus_factor( );
+			term.setTerm_solidus_factor( termSolidusFactor );
+			convertExpressionToTermSolidusFactor( expression, termSolidusFactor );
+		}
+		else if ( expression.getExpressionType( ) == EExpressionType.arithmetic_times_t )
+		{
+			term_asterisk_factor termAsteriskFactor = new term_asterisk_factor( );
+			term.setTerm_asterisk_factor( termAsteriskFactor );
+			convertExpressionToTermAsteriskFactor( expression,
+					termAsteriskFactor );
+		}
+		else
+		{
+			factor factor = new factor( );
+			term.setFactor( factor );
+			convertExpressionToFactor( expression, factor );
+		}
+	}
+
+	private void convertExpressionToFactor( TExpression expression,
+			factor factor )
+	{
+		if ( expression.getExpressionType( ) == EExpressionType.unary_plus_t )
+		{
+			sign sign = new sign( );
+			sign.setPlus_sign( "+" );
+			factor.setSign( sign );
+			convertExpressionToNumericPrimary( expression.getLeftOperand( ),
+					factor.getNumeric_primary( ) );
+		}
+		else if ( expression.getExpressionType( ) == EExpressionType.unary_minus_t )
+		{
+			sign sign = new sign( );
+			sign.setPlus_sign( "-" );
+			factor.setSign( sign );
+			convertExpressionToNumericPrimary( expression.getLeftOperand( ),
+					factor.getNumeric_primary( ) );
+		}
+		else
+		{
+			convertExpressionToNumericPrimary( expression,
+					factor.getNumeric_primary( ) );
+		}
+	}
+
+	private void convertExpressionToNumericPrimary( TExpression expression,
+			numeric_primary numericPrimary )
+	{
+		if ( expression.getExpressionType( ) == EExpressionType.function_t )
+		{
+			numeric_value_function numericValueFunction = new numeric_value_function( );
+			numericPrimary.setNumeric_value_function( numericValueFunction );
+			convertExpressionToNumericValueFunction( expression,
+					numericValueFunction );
+		}
+		else
+		{
+			value_expression_primary valueExpressionPrimary = new value_expression_primary( );
+			numericPrimary.setValue_expression_primary( valueExpressionPrimary );
+			convertExpressionToNumericValueExpressionPrimary( expression,
+					valueExpressionPrimary );
+		}
+	}
+
+	private void convertExpressionToNumericValueExpressionPrimary(
+			TExpression expression,
+			value_expression_primary valueExpressionPrimary )
+	{
 		// TODO Auto-generated method stub
 
+	}
+
+	private void convertExpressionToNumericValueFunction(
+			TExpression expression, numeric_value_function numericValueFunction )
+	{
+		// TODO Auto-generated method stub
+
+	}
+
+	private void convertExpressionToTermAsteriskFactor( TExpression expression,
+			term_asterisk_factor termAsteriskFactor )
+	{
+		convertExpressionToTerm( expression.getLeftOperand( ),
+				termAsteriskFactor.getTerm( ) );
+		convertExpressionToFactor( expression.getRightOperand( ),
+				termAsteriskFactor.getFactor( ) );
+	}
+
+	private void convertExpressionToTermSolidusFactor( TExpression expression,
+			term_solidus_factor termSolidusFactor )
+	{
+		convertExpressionToTerm( expression.getLeftOperand( ),
+				termSolidusFactor.getTerm( ) );
+		convertExpressionToFactor( expression.getRightOperand( ),
+				termSolidusFactor.getFactor( ) );
+	}
+
+	private void convertExpressionToMinus( TExpression expression, minus minus )
+	{
+		convertExpressionToNumericValueExpression( expression.getLeftOperand( ),
+				minus.getNumeric_value_expression( ) );
+		convertExpressionToTerm( expression.getRightOperand( ), minus.getTerm( ) );
+	}
+
+	private void convertExpressionToPlus( TExpression expression, plus plus )
+	{
+		convertExpressionToNumericValueExpression( expression.getLeftOperand( ),
+				plus.getNumeric_value_expression( ) );
+		convertExpressionToTerm( expression.getRightOperand( ), plus.getTerm( ) );
+	}
+
+	private boolean isNumericValueExpression( TExpression expression )
+	{
+		if ( expression.getExpressionType( ) == EExpressionType.arithmetic_plus_t
+				|| expression.getExpressionType( ) == EExpressionType.arithmetic_minus_t
+				|| expression.getExpressionType( ) == EExpressionType.arithmetic_divide_t
+				|| expression.getExpressionType( ) == EExpressionType.arithmetic_times_t
+				|| expression.getExpressionType( ) == EExpressionType.unary_plus_t
+				|| expression.getExpressionType( ) == EExpressionType.unary_minus_t )
+		{
+			return true;
+		}
+		else if ( expression.getExpressionType( ) == EExpressionType.simple_constant_t )
+		{
+			if ( Utility.isNumber( expression.toString( ) ) )
+			{
+				return true;
+			}
+		}
+		else if ( expression.getExpressionType( ) == EExpressionType.function_t )
+		{
+			String functionName = expression.getFunctionCall( )
+					.getFunctionName( )
+					.toString( );
+			if ( Utility.isNumericValueFunction( functionName ) )
+			{
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private void convertInsertStmt2Model( TInsertSqlStatement insert,

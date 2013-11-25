@@ -10,6 +10,21 @@ public class factor
 	private sign sign;
 
 	@Element
-	private numeric_primary numeric_primary;
+	private numeric_primary numeric_primary = new numeric_primary( );
+
+	public sign getSign( )
+	{
+		return sign;
+	}
+
+	public void setSign( sign sign )
+	{
+		this.sign = sign;
+	}
+
+	public numeric_primary getNumeric_primary( )
+	{
+		return numeric_primary;
+	}
 
 }
