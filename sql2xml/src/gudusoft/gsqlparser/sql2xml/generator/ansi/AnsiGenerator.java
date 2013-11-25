@@ -40,6 +40,7 @@ import gudusoft.gsqlparser.sql2xml.model.direct_sql_data_statement;
 import gudusoft.gsqlparser.sql2xml.model.directly_executable_statement;
 import gudusoft.gsqlparser.sql2xml.model.factor;
 import gudusoft.gsqlparser.sql2xml.model.from_clause;
+import gudusoft.gsqlparser.sql2xml.model.general_literal;
 import gudusoft.gsqlparser.sql2xml.model.identifier;
 import gudusoft.gsqlparser.sql2xml.model.insert_statement;
 import gudusoft.gsqlparser.sql2xml.model.lateral_derived_table_as_correlation_name;
@@ -47,6 +48,7 @@ import gudusoft.gsqlparser.sql2xml.model.local_or_schema_qualified_name;
 import gudusoft.gsqlparser.sql2xml.model.local_or_schema_qualifier;
 import gudusoft.gsqlparser.sql2xml.model.merge_statement;
 import gudusoft.gsqlparser.sql2xml.model.minus;
+import gudusoft.gsqlparser.sql2xml.model.nonparenthesized_value_expression_primary;
 import gudusoft.gsqlparser.sql2xml.model.numeric_primary;
 import gudusoft.gsqlparser.sql2xml.model.numeric_value_expression;
 import gudusoft.gsqlparser.sql2xml.model.numeric_value_function;
@@ -54,6 +56,7 @@ import gudusoft.gsqlparser.sql2xml.model.of_column_name_list;
 import gudusoft.gsqlparser.sql2xml.model.only_spec_as_correction_name;
 import gudusoft.gsqlparser.sql2xml.model.order_by_clause;
 import gudusoft.gsqlparser.sql2xml.model.ordering_specification;
+import gudusoft.gsqlparser.sql2xml.model.parenthesized_value_expression;
 import gudusoft.gsqlparser.sql2xml.model.plus;
 import gudusoft.gsqlparser.sql2xml.model.qualified_asterisk;
 import gudusoft.gsqlparser.sql2xml.model.query_expression;
@@ -86,6 +89,9 @@ import gudusoft.gsqlparser.sql2xml.model.term;
 import gudusoft.gsqlparser.sql2xml.model.term_asterisk_factor;
 import gudusoft.gsqlparser.sql2xml.model.term_solidus_factor;
 import gudusoft.gsqlparser.sql2xml.model.unicode_delimited_identifier;
+import gudusoft.gsqlparser.sql2xml.model.unsigned_literal;
+import gudusoft.gsqlparser.sql2xml.model.unsigned_numeric_literal;
+import gudusoft.gsqlparser.sql2xml.model.unsigned_value_specification;
 import gudusoft.gsqlparser.sql2xml.model.updatability_clause;
 import gudusoft.gsqlparser.sql2xml.model.update_of_clause;
 import gudusoft.gsqlparser.sql2xml.model.update_statement_searched;
@@ -550,7 +556,7 @@ public class AnsiGenerator implements SQL2XMLGenerator
 	private void convertColumnToDerivedColumn( TResultColumn column,
 			derived_column derivedColumn )
 	{
-		convertExpression2Model( column.getExpr( ),
+		convertExpressionToValueExpression( column.getExpr( ),
 				derivedColumn.getValue_expression( ) );
 
 		if ( column.getAliasClause( ) != null )
@@ -694,12 +700,13 @@ public class AnsiGenerator implements SQL2XMLGenerator
 
 			value_expression valueExpression = sortKey.getValue_expression( );
 
-			convertExpression2Model( item.getSortKey( ), valueExpression );
+			convertExpressionToValueExpression( item.getSortKey( ),
+					valueExpression );
 		}
 
 	}
 
-	private void convertExpression2Model( TExpression expression,
+	private void convertExpressionToValueExpression( TExpression expression,
 			value_expression valueExpression )
 	{
 		switch ( expression.getExpressionType( ) )
@@ -822,7 +829,101 @@ public class AnsiGenerator implements SQL2XMLGenerator
 			TExpression expression,
 			value_expression_primary valueExpressionPrimary )
 	{
+		if ( expression.toString( ).startsWith( "(" )
+				&& expression.toString( ).endsWith( ")" ) )
+		{
+			parenthesized_value_expression parenthesizedValueExpression = new parenthesized_value_expression( );
+			valueExpressionPrimary.setParenthesized_value_expression( parenthesizedValueExpression );
+			convertExpressionToParenthesizedValueExpression( expression.getLeftOperand( ),
+					parenthesizedValueExpression );
+		}
+		else
+		{
+			nonparenthesized_value_expression_primary nonparenthesizedValueExpressionPrimary = new nonparenthesized_value_expression_primary( );
+			valueExpressionPrimary.setNonparenthesized_value_expression_primary( nonparenthesizedValueExpressionPrimary );
+			onvertExpressionToNonParenthesizedValueExpression( expression,
+					nonparenthesizedValueExpressionPrimary );
+		}
+	}
+
+	private void onvertExpressionToNonParenthesizedValueExpression(
+			TExpression expression,
+			nonparenthesized_value_expression_primary nonparenthesizedValueExpressionPrimary )
+	{
+		switch ( expression.getExpressionType( ) )
+		{
+			case simple_constant_t :
+				unsigned_value_specification unsignedValueSpecification = new unsigned_value_specification( );
+				nonparenthesizedValueExpressionPrimary.setUnsigned_value_specification( unsignedValueSpecification );
+				convertExpressionToUnsignedValueSpecification( expression,
+						unsignedValueSpecification );
+				break;
+			default :
+		}
+
+	}
+
+	private void convertExpressionToUnsignedValueSpecification(
+			TExpression expression,
+			unsigned_value_specification unsignedValueSpecification )
+	{
+		switch ( expression.getExpressionType( ) )
+		{
+			case simple_constant_t :
+				unsigned_literal unsignedLiteral = new unsigned_literal( );
+				unsignedValueSpecification.setUnsigned_literal( unsignedLiteral );
+				convertExpressionToUnsignedLiteral( expression, unsignedLiteral );
+				break;
+			default :
+		}
+
+	}
+
+	private void convertExpressionToUnsignedLiteral( TExpression expression,
+			unsigned_literal unsignedLiteral )
+	{
+		if ( Utility.isNumber( expression.toString( ) ) )
+		{
+			unsigned_numeric_literal unsignedNumericLiteral = new unsigned_numeric_literal( );
+			unsignedLiteral.setUnsigned_numeric_literal( unsignedNumericLiteral );
+			convertExpressionToUnsignedNumericLiteral( expression,
+					unsignedNumericLiteral );
+		}
+		else
+		{
+			general_literal generalLiteral = new general_literal( );
+			unsignedLiteral.setGeneral_literal( generalLiteral );
+			convertExpressionToGeneralLiteral( expression, generalLiteral );
+		}
+	}
+
+	private void convertExpressionToGeneralLiteral( TExpression expression,
+			general_literal generalLiteral )
+	{
 		// TODO Auto-generated method stub
+
+	}
+
+	private void convertExpressionToUnsignedNumericLiteral(
+			TExpression expression,
+			unsigned_numeric_literal unsignedNumericLiteral )
+	{
+		if ( expression.toString( ).toLowerCase( ).indexOf( 'e' ) != -1 )
+		{
+			unsignedNumericLiteral.setApproximate_numeric_literal( expression.toString( ) );
+		}
+		else
+		{
+			unsignedNumericLiteral.setExact_numeric_literal( expression.toString( ) );
+		}
+	}
+
+	private void convertExpressionToParenthesizedValueExpression(
+			TExpression expression,
+			parenthesized_value_expression parenthesizedValueExpression )
+	{
+		convertExpressionToValueExpression( expression,
+				parenthesizedValueExpression.getValue_expression( ) );
 
 	}
 
@@ -924,7 +1025,6 @@ public class AnsiGenerator implements SQL2XMLGenerator
 
 	}
 
-	@Override
 	public String getErrorMessage( )
 	{
 		return errorMessage;

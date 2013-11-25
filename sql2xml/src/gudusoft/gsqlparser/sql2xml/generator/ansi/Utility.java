@@ -63,7 +63,30 @@ public class Utility
 
 	public static boolean isNumber( String string )
 	{
-		// TODO Auto-generated method stub
+		try
+		{
+			Integer.parseInt( string );
+			return true;
+		}
+		catch ( NumberFormatException e )
+		{
+		}
+		try
+		{
+			Float.parseFloat( string );
+			return true;
+		}
+		catch ( NumberFormatException e )
+		{
+		}
+		try
+		{
+			Double.parseDouble( string );
+			return true;
+		}
+		catch ( NumberFormatException e )
+		{
+		}
 		return false;
 	}
 }
