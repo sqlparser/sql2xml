@@ -275,7 +275,7 @@ public class SourceTokenSearcher
 			TSourceTokenList list, int startPos, int endPos )
 	{
 
-		for ( int i = startPos; i < endPos; i++ )
+		for ( int i = startPos; i <= endPos; i++ )
 		{
 			if ( i >= 0 && i < list.size( ) )
 			{

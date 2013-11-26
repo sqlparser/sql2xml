@@ -1,0 +1,1 @@
+select 1.23, -1.1, 2E6, -3E4 from t

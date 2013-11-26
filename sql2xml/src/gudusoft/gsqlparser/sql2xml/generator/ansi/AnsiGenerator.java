@@ -37,6 +37,7 @@ import gudusoft.gsqlparser.sql2xml.model.derived_column;
 import gudusoft.gsqlparser.sql2xml.model.derived_table_as_correlation_name;
 import gudusoft.gsqlparser.sql2xml.model.direct_select_statement_multiple_rows;
 import gudusoft.gsqlparser.sql2xml.model.direct_sql_data_statement;
+import gudusoft.gsqlparser.sql2xml.model.direct_sql_statement;
 import gudusoft.gsqlparser.sql2xml.model.directly_executable_statement;
 import gudusoft.gsqlparser.sql2xml.model.factor;
 import gudusoft.gsqlparser.sql2xml.model.from_clause;
@@ -104,8 +105,14 @@ import gudusoft.gsqlparser.stmt.TMergeSqlStatement;
 import gudusoft.gsqlparser.stmt.TSelectSqlStatement;
 import gudusoft.gsqlparser.stmt.TUpdateSqlStatement;
 
+import java.io.File;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
+
+import org.simpleframework.xml.Serializer;
+import org.simpleframework.xml.core.Persister;
+import org.simpleframework.xml.stream.Format;
 
 public class AnsiGenerator implements SQL2XMLGenerator
 {
@@ -127,7 +134,6 @@ public class AnsiGenerator implements SQL2XMLGenerator
 			return convertSQL2XML( sqlparser );
 	}
 
-	@Override
 	public String generateXML( String sql )
 	{
 		errorMessage = null;
@@ -143,16 +149,60 @@ public class AnsiGenerator implements SQL2XMLGenerator
 			return convertSQL2XML( sqlparser );
 	}
 
+	public String generateXML( EDbVendor vendor, File sqlFile )
+	{
+		errorMessage = null;
+		TGSqlParser sqlparser = new TGSqlParser( vendor );
+		sqlparser.sqlfilename = sqlFile.getAbsolutePath( );
+		int resultCode = sqlparser.parse( );
+		if ( resultCode != 0 )
+		{
+			errorMessage = sqlparser.getErrormessage( );
+			return null;
+		}
+		else
+			return convertSQL2XML( sqlparser );
+	}
+
+	public String generateXML( File sqlFile )
+	{
+		errorMessage = null;
+		TGSqlParser sqlparser = new TGSqlParser( EDbVendor.dbvansi );
+		sqlparser.sqlfilename = sqlFile.getAbsolutePath( );
+		int resultCode = sqlparser.parse( );
+		if ( resultCode != 0 )
+		{
+			errorMessage = sqlparser.getErrormessage( );
+			return null;
+		}
+		else
+			return convertSQL2XML( sqlparser );
+	}
+
 	protected String convertSQL2XML( TGSqlParser sqlparser )
 	{
-
+		StringBuffer buffer = new StringBuffer( );
 		TStatementList stmts = sqlparser.getSqlstatements( );
 		for ( int i = 0; i < stmts.size( ); i++ )
 		{
-			directly_executable_statement directly_executable_statement = new directly_executable_statement( );
-			convertStmt2Model( stmts.get( i ), directly_executable_statement );
+			direct_sql_statement directSqlStatement = new direct_sql_statement( );
+			convertStmt2Model( stmts.get( i ),
+					directSqlStatement.getDirectly_executable_statement( ) );
+
+			try
+			{
+				Serializer serializer = new Persister( new Format( "<?xml version=\"1.0\" encoding= \"UTF-8\" ?>" ) );
+				StringWriter sw = new StringWriter( );
+				serializer.write( directSqlStatement, sw );
+				sw.close( );
+				buffer.append( sw.toString( ) );
+			}
+			catch ( Exception e )
+			{
+				e.printStackTrace( );
+			}
 		}
-		return null;
+		return buffer.toString( );
 	}
 
 	protected void convertStmt2Model( TCustomSqlStatement stmt,
@@ -346,7 +396,7 @@ public class AnsiGenerator implements SQL2XMLGenerator
 			TJoin join = select.joins.getJoin( i );
 			TTable table = join.getTable( );
 			TJoinItemList items = join.getJoinItems( );
-			if ( items != null )
+			if ( items != null && items.size( ) > 0 )
 			{
 				for ( int j = 0; j < items.size( ); j++ )
 				{
@@ -788,15 +838,15 @@ public class AnsiGenerator implements SQL2XMLGenerator
 			sign sign = new sign( );
 			sign.setPlus_sign( "+" );
 			factor.setSign( sign );
-			convertExpressionToNumericPrimary( expression.getLeftOperand( ),
+			convertExpressionToNumericPrimary( expression.getRightOperand( ),
 					factor.getNumeric_primary( ) );
 		}
 		else if ( expression.getExpressionType( ) == EExpressionType.unary_minus_t )
 		{
 			sign sign = new sign( );
-			sign.setPlus_sign( "-" );
+			sign.setMinus_sign( "-" );
 			factor.setSign( sign );
-			convertExpressionToNumericPrimary( expression.getLeftOperand( ),
+			convertExpressionToNumericPrimary( expression.getRightOperand( ),
 					factor.getNumeric_primary( ) );
 		}
 		else
