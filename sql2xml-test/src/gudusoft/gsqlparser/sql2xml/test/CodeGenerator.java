@@ -8,6 +8,7 @@ import gudusoft.gsqlparser.sql2xml.generator.SQL2XMLGeneratorFactory;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 
 public class CodeGenerator
 {
@@ -35,8 +36,10 @@ public class CodeGenerator
 					{
 						FileOutputStream fos = new FileOutputStream( new File( testBaseDir,
 								caseName.substring( 0, index ) + ".xml" ) );
-						fos.write( result.getBytes( ) );
-						fos.close( );
+						OutputStreamWriter writer = new OutputStreamWriter( fos,
+								"UTF-8" );
+						writer.write( result );
+						writer.close( );
 					}
 					catch ( Exception e )
 					{
