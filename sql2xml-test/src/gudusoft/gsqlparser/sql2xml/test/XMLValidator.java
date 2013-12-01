@@ -25,7 +25,7 @@ public class XMLValidator
 		public InputSource resolveEntity( String publicId, String systemId )
 				throws SAXException, IOException
 		{
-			return new InputSource( "E:\\git\\sql2xml\\sql2xml-test\\dtd\\ansi2003.xsd" );
+			return new InputSource( ".\\dtd\\ansi2003.xsd" );
 		}
 	}
 

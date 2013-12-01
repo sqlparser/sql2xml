@@ -25,10 +25,16 @@ import gudusoft.gsqlparser.sql2xml.generator.SQL2XMLGenerator;
 import gudusoft.gsqlparser.sql2xml.model.actual_identifier;
 import gudusoft.gsqlparser.sql2xml.model.as_clause;
 import gudusoft.gsqlparser.sql2xml.model.catalog_name;
+import gudusoft.gsqlparser.sql2xml.model.character_factor;
+import gudusoft.gsqlparser.sql2xml.model.character_primary;
+import gudusoft.gsqlparser.sql2xml.model.character_string_literal;
+import gudusoft.gsqlparser.sql2xml.model.character_value_expression;
+import gudusoft.gsqlparser.sql2xml.model.character_value_function;
 import gudusoft.gsqlparser.sql2xml.model.collection_derived_table_as_correction_name;
 import gudusoft.gsqlparser.sql2xml.model.column_name;
 import gudusoft.gsqlparser.sql2xml.model.column_name_list;
 import gudusoft.gsqlparser.sql2xml.model.common_value_expression;
+import gudusoft.gsqlparser.sql2xml.model.concatenation;
 import gudusoft.gsqlparser.sql2xml.model.correlation_name_with_derived_column_list;
 import gudusoft.gsqlparser.sql2xml.model.cursor_specification;
 import gudusoft.gsqlparser.sql2xml.model.delete_statement_searched;
@@ -49,6 +55,7 @@ import gudusoft.gsqlparser.sql2xml.model.local_or_schema_qualified_name;
 import gudusoft.gsqlparser.sql2xml.model.local_or_schema_qualifier;
 import gudusoft.gsqlparser.sql2xml.model.merge_statement;
 import gudusoft.gsqlparser.sql2xml.model.minus;
+import gudusoft.gsqlparser.sql2xml.model.national_character_string_literal;
 import gudusoft.gsqlparser.sql2xml.model.nonparenthesized_value_expression_primary;
 import gudusoft.gsqlparser.sql2xml.model.numeric_primary;
 import gudusoft.gsqlparser.sql2xml.model.numeric_value_expression;
@@ -68,6 +75,7 @@ import gudusoft.gsqlparser.sql2xml.model.query_expression_body_union;
 import gudusoft.gsqlparser.sql2xml.model.query_primary;
 import gudusoft.gsqlparser.sql2xml.model.query_specification;
 import gudusoft.gsqlparser.sql2xml.model.query_term;
+import gudusoft.gsqlparser.sql2xml.model.quoted_character_representation;
 import gudusoft.gsqlparser.sql2xml.model.read_only_or_update_of;
 import gudusoft.gsqlparser.sql2xml.model.schema_name;
 import gudusoft.gsqlparser.sql2xml.model.select_list;
@@ -78,6 +86,8 @@ import gudusoft.gsqlparser.sql2xml.model.simple_table;
 import gudusoft.gsqlparser.sql2xml.model.sort_key;
 import gudusoft.gsqlparser.sql2xml.model.sort_specification;
 import gudusoft.gsqlparser.sql2xml.model.sort_specification_list;
+import gudusoft.gsqlparser.sql2xml.model.string_value_expression;
+import gudusoft.gsqlparser.sql2xml.model.string_value_function;
 import gudusoft.gsqlparser.sql2xml.model.table_expression;
 import gudusoft.gsqlparser.sql2xml.model.table_factor;
 import gudusoft.gsqlparser.sql2xml.model.table_function_derived_table_as_correction_name;
@@ -89,6 +99,7 @@ import gudusoft.gsqlparser.sql2xml.model.table_reference;
 import gudusoft.gsqlparser.sql2xml.model.term;
 import gudusoft.gsqlparser.sql2xml.model.term_asterisk_factor;
 import gudusoft.gsqlparser.sql2xml.model.term_solidus_factor;
+import gudusoft.gsqlparser.sql2xml.model.unicode_character_string_literal;
 import gudusoft.gsqlparser.sql2xml.model.unicode_delimited_identifier;
 import gudusoft.gsqlparser.sql2xml.model.unsigned_literal;
 import gudusoft.gsqlparser.sql2xml.model.unsigned_numeric_literal;
@@ -780,7 +791,121 @@ public class AnsiGenerator implements SQL2XMLGenerator
 			convertExpressionToNumericValueExpression( expression,
 					numericValueExpression );
 		}
+		else if ( isStringValueExpression( expression ) )
+		{
+			string_value_expression stringValueExpression = new string_value_expression( );
+			commonValueExpression.setString_value_expression( stringValueExpression );
+			convertExpressionToStringValueExpression( expression,
+					stringValueExpression );
+		}
 
+	}
+
+	private void convertExpressionToStringValueExpression(
+			TExpression expression,
+			string_value_expression stringValueExpression )
+	{
+		// Ignore binary_value_expression, I can't analyze the binary type
+		// here.
+		character_value_expression charValueExpression = new character_value_expression( );
+		stringValueExpression.setCharacter_value_expression( charValueExpression );
+		convertExpressionToCharacterValueExpression( expression,
+				charValueExpression );
+
+	}
+
+	private void convertExpressionToCharacterValueExpression(
+			TExpression expression,
+			character_value_expression charValueExpression )
+	{
+		if ( expression.getExpressionType( ) == EExpressionType.concatenate_t )
+		{
+			concatenation concatenation = new concatenation( );
+			charValueExpression.setConcatenation( concatenation );
+			convertExpressionToConcatenation( expression, concatenation );
+		}
+		else
+		{
+			character_factor characterFactor = new character_factor( );
+			charValueExpression.setCharacter_factor( characterFactor );
+			convertExpressionToCharacterFactor( expression, characterFactor );
+		}
+	}
+
+	private void convertExpressionToCharacterFactor( TExpression expression,
+			character_factor character_factor )
+	{
+		convertExpressionToCharacterPrimary( expression,
+				character_factor.getCharacter_primary( ) );
+	}
+
+	private void convertExpressionToCharacterPrimary( TExpression expression,
+			character_primary character_primary )
+	{
+		if ( expression.getExpressionType( ) == EExpressionType.function_t )
+		{
+			string_value_function stringValueFunction = new string_value_function( );
+			character_primary.setString_value_function( stringValueFunction );
+			convertExpressionToStringValueFunction( expression,
+					stringValueFunction );
+		}
+		else
+		{
+			value_expression_primary valueExpressionPrimary = new value_expression_primary( );
+			character_primary.setValue_expression_primary( valueExpressionPrimary );
+			convertExpressionToValueExpressionPrimary( expression,
+					valueExpressionPrimary );
+		}
+	}
+
+	private void convertExpressionToStringValueFunction(
+			TExpression expression, string_value_function stringValueFunction )
+	{
+		character_value_function characterValueFunction = new character_value_function( );
+		stringValueFunction.setCharacter_value_function( characterValueFunction );
+		convertExpressionToCharacterValueFunction( characterValueFunction );
+	}
+
+	private void convertExpressionToCharacterValueFunction(
+			character_value_function characterValueFunction )
+	{
+		// TODO Auto-generated method stub
+
+	}
+
+	private void convertExpressionToConcatenation( TExpression expression,
+			concatenation concatenation )
+	{
+		convertExpressionToCharacterValueExpression( expression.getLeftOperand( ),
+				concatenation.getCharacter_value_expression( ) );
+		convertExpressionToCharacterFactor( expression.getRightOperand( ),
+				concatenation.getCharacter_factor( ) );
+	}
+
+	private boolean isStringValueExpression( TExpression expression )
+	{
+		if ( expression.getExpressionType( ) == EExpressionType.concatenate_t )
+		{
+			return true;
+		}
+		else if ( expression.getExpressionType( ) == EExpressionType.simple_constant_t )
+		{
+			if ( Utility.isString( expression.toString( ) ) )
+			{
+				return true;
+			}
+		}
+		else if ( expression.getExpressionType( ) == EExpressionType.function_t )
+		{
+			String functionName = expression.getFunctionCall( )
+					.getFunctionName( )
+					.toString( );
+			if ( Utility.isStringValueFunction( functionName ) )
+			{
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private void convertExpressionToNumericValueExpression(
@@ -870,12 +995,12 @@ public class AnsiGenerator implements SQL2XMLGenerator
 		{
 			value_expression_primary valueExpressionPrimary = new value_expression_primary( );
 			numericPrimary.setValue_expression_primary( valueExpressionPrimary );
-			convertExpressionToNumericValueExpressionPrimary( expression,
+			convertExpressionToValueExpressionPrimary( expression,
 					valueExpressionPrimary );
 		}
 	}
 
-	private void convertExpressionToNumericValueExpressionPrimary(
+	private void convertExpressionToValueExpressionPrimary(
 			TExpression expression,
 			value_expression_primary valueExpressionPrimary )
 	{
@@ -891,12 +1016,12 @@ public class AnsiGenerator implements SQL2XMLGenerator
 		{
 			nonparenthesized_value_expression_primary nonparenthesizedValueExpressionPrimary = new nonparenthesized_value_expression_primary( );
 			valueExpressionPrimary.setNonparenthesized_value_expression_primary( nonparenthesizedValueExpressionPrimary );
-			onvertExpressionToNonParenthesizedValueExpression( expression,
+			convertExpressionToNonParenthesizedValueExpression( expression,
 					nonparenthesizedValueExpressionPrimary );
 		}
 	}
 
-	private void onvertExpressionToNonParenthesizedValueExpression(
+	private void convertExpressionToNonParenthesizedValueExpression(
 			TExpression expression,
 			nonparenthesized_value_expression_primary nonparenthesizedValueExpressionPrimary )
 	{
@@ -950,8 +1075,62 @@ public class AnsiGenerator implements SQL2XMLGenerator
 	private void convertExpressionToGeneralLiteral( TExpression expression,
 			general_literal generalLiteral )
 	{
+		if ( Utility.isString( expression.toString( ) ) )
+		{
+			if ( Utility.isNationalString( expression.toString( ) ) )
+			{
+				national_character_string_literal nationalCharacterStringLiteral = new national_character_string_literal( );
+				generalLiteral.setNational_character_string_literal( nationalCharacterStringLiteral );
+				convertExpressionToNationalCharacterStringLiteral( expression,
+						nationalCharacterStringLiteral );
+			}
+			else if ( Utility.isUnicodeString( expression.toString( ) ) )
+			{
+				unicode_character_string_literal unicodeCharacterStringLiteral = new unicode_character_string_literal( );
+				generalLiteral.setUnicode_character_string_literal( unicodeCharacterStringLiteral );
+				convertExpressionToUnicodeCharacterStringLiteral( expression,
+						unicodeCharacterStringLiteral );
+			}
+			else
+			{
+				character_string_literal characterStringLiteral = new character_string_literal( );
+				generalLiteral.setCharacter_string_literal( characterStringLiteral );
+				convertExpressionToCharacterStringLiteral( expression,
+						characterStringLiteral );
+			}
+		}
+
+	}
+
+	private void convertExpressionToCharacterStringLiteral(
+			TExpression expression,
+			character_string_literal characterStringLiteral )
+	{
+		List<quoted_character_representation> quotedCharacterRepresentations = characterStringLiteral.getQuoted_character_representation( );
+		quoted_character_representation quotedCharacterRepresentation = new quoted_character_representation( );
+		quotedCharacterRepresentations.add( quotedCharacterRepresentation );
+		quotedCharacterRepresentation.setCharacter_representation( expression.toString( )
+				.substring( 1, expression.toString( ).length( ) - 1 ) );
+
+	}
+
+	private void convertExpressionToUnicodeCharacterStringLiteral(
+			TExpression expression,
+			unicode_character_string_literal unicodeCharacterStringLiteral )
+	{
 		// TODO Auto-generated method stub
 
+	}
+
+	private void convertExpressionToNationalCharacterStringLiteral(
+			TExpression expression,
+			national_character_string_literal nationalCharacterStringLiteral )
+	{
+		List<quoted_character_representation> quotedCharacterRepresentations = nationalCharacterStringLiteral.getQuoted_character_representation( );
+		quoted_character_representation quotedCharacterRepresentation = new quoted_character_representation( );
+		quotedCharacterRepresentations.add( quotedCharacterRepresentation );
+		quotedCharacterRepresentation.setCharacter_representation( expression.toString( )
+				.substring( 2, expression.toString( ).length( ) - 1 ) );
 	}
 
 	private void convertExpressionToUnsignedNumericLiteral(

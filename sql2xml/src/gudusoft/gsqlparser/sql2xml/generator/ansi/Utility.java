@@ -89,4 +89,55 @@ public class Utility
 		}
 		return false;
 	}
+
+	static List<String> stringValueFunctions = new ArrayList<String>( );
+	static
+	{
+		stringValueFunctions.add( "SUBSTRING" );
+		stringValueFunctions.add( "SUBSTRING_REGEX" );
+		stringValueFunctions.add( "UPPER" );
+		stringValueFunctions.add( "LOWER" );
+		stringValueFunctions.add( "CONVERT" );
+		stringValueFunctions.add( "TRANSLATE" );
+		stringValueFunctions.add( "TRANSLATE_REGEX" );
+		stringValueFunctions.add( "TRIM" );
+		stringValueFunctions.add( "OVERLAY" );
+		stringValueFunctions.add( "NORMALIZE" );
+		stringValueFunctions.add( "SPECIFICTYPE" );
+	}
+
+	public static boolean isStringValueFunction( String functionName )
+	{
+		for ( int i = 0; i < stringValueFunctions.size( ); i++ )
+		{
+			if ( stringValueFunctions.get( i ).equalsIgnoreCase( functionName ) )
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public static boolean isString( String string )
+	{
+		if ( string != null
+				&& string.startsWith( "'" )
+				&& string.endsWith( "'" ) )
+			return true;
+		else if ( isNationalString( string ) )
+			return true;
+		return false;
+	}
+
+	public static boolean isNationalString( String string )
+	{
+		if ( string.toUpperCase( ).startsWith( "N'" ) && string.endsWith( "'" ) )
+			return true;
+		return false;
+	}
+
+	public static boolean isUnicodeString( String string )
+	{
+		return false;
+	}
 }
