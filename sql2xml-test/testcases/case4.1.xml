@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding= "UTF-8" ?>
-<direct_sql_statement xmlns="http://www.sqlparser.com/xml/ansi2003" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<direct_sql_statement xmlns="http://www.sqlparser.com/xml/ansi2003" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sqlparser.com/xml/ansi2003 http://sqlparser.com/xml/ansi2003/ansi2003.xsd">
    <directly_executable_statement>
       <direct_sql_data_statement>
          <direct_select_statement_multiple_rows>
