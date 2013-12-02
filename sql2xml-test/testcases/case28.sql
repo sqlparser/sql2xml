@@ -1,0 +1,1 @@
+select 'This is name:'||empname from emp;
