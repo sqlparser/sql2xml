@@ -1,0 +1,1 @@
+select c.f from t c where c.f2 > 1

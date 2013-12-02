@@ -21,95 +21,9 @@ import gudusoft.gsqlparser.nodes.TOrderByItem;
 import gudusoft.gsqlparser.nodes.TOrderByItemList;
 import gudusoft.gsqlparser.nodes.TResultColumn;
 import gudusoft.gsqlparser.nodes.TTable;
+import gudusoft.gsqlparser.nodes.TWhereClause;
 import gudusoft.gsqlparser.sql2xml.generator.SQL2XMLGenerator;
-import gudusoft.gsqlparser.sql2xml.model.actual_identifier;
-import gudusoft.gsqlparser.sql2xml.model.as_clause;
-import gudusoft.gsqlparser.sql2xml.model.catalog_name;
-import gudusoft.gsqlparser.sql2xml.model.character_factor;
-import gudusoft.gsqlparser.sql2xml.model.character_primary;
-import gudusoft.gsqlparser.sql2xml.model.character_string_literal;
-import gudusoft.gsqlparser.sql2xml.model.character_value_expression;
-import gudusoft.gsqlparser.sql2xml.model.character_value_function;
-import gudusoft.gsqlparser.sql2xml.model.collection_derived_table_as_correction_name;
-import gudusoft.gsqlparser.sql2xml.model.column_name;
-import gudusoft.gsqlparser.sql2xml.model.column_name_list;
-import gudusoft.gsqlparser.sql2xml.model.common_value_expression;
-import gudusoft.gsqlparser.sql2xml.model.concatenation;
-import gudusoft.gsqlparser.sql2xml.model.correlation_name_with_derived_column_list;
-import gudusoft.gsqlparser.sql2xml.model.cursor_specification;
-import gudusoft.gsqlparser.sql2xml.model.delete_statement_searched;
-import gudusoft.gsqlparser.sql2xml.model.delimited_identifier;
-import gudusoft.gsqlparser.sql2xml.model.derived_column;
-import gudusoft.gsqlparser.sql2xml.model.derived_table_as_correlation_name;
-import gudusoft.gsqlparser.sql2xml.model.direct_select_statement_multiple_rows;
-import gudusoft.gsqlparser.sql2xml.model.direct_sql_data_statement;
-import gudusoft.gsqlparser.sql2xml.model.direct_sql_statement;
-import gudusoft.gsqlparser.sql2xml.model.directly_executable_statement;
-import gudusoft.gsqlparser.sql2xml.model.factor;
-import gudusoft.gsqlparser.sql2xml.model.from_clause;
-import gudusoft.gsqlparser.sql2xml.model.general_literal;
-import gudusoft.gsqlparser.sql2xml.model.identifier;
-import gudusoft.gsqlparser.sql2xml.model.insert_statement;
-import gudusoft.gsqlparser.sql2xml.model.lateral_derived_table_as_correlation_name;
-import gudusoft.gsqlparser.sql2xml.model.local_or_schema_qualified_name;
-import gudusoft.gsqlparser.sql2xml.model.local_or_schema_qualifier;
-import gudusoft.gsqlparser.sql2xml.model.merge_statement;
-import gudusoft.gsqlparser.sql2xml.model.minus;
-import gudusoft.gsqlparser.sql2xml.model.national_character_string_literal;
-import gudusoft.gsqlparser.sql2xml.model.nonparenthesized_value_expression_primary;
-import gudusoft.gsqlparser.sql2xml.model.numeric_primary;
-import gudusoft.gsqlparser.sql2xml.model.numeric_value_expression;
-import gudusoft.gsqlparser.sql2xml.model.numeric_value_function;
-import gudusoft.gsqlparser.sql2xml.model.of_column_name_list;
-import gudusoft.gsqlparser.sql2xml.model.only_spec_as_correction_name;
-import gudusoft.gsqlparser.sql2xml.model.order_by_clause;
-import gudusoft.gsqlparser.sql2xml.model.ordering_specification;
-import gudusoft.gsqlparser.sql2xml.model.parenthesized_value_expression;
-import gudusoft.gsqlparser.sql2xml.model.plus;
-import gudusoft.gsqlparser.sql2xml.model.qualified_asterisk;
-import gudusoft.gsqlparser.sql2xml.model.query_expression;
-import gudusoft.gsqlparser.sql2xml.model.query_expression_body;
-import gudusoft.gsqlparser.sql2xml.model.query_expression_body_except;
-import gudusoft.gsqlparser.sql2xml.model.query_expression_body_intersect;
-import gudusoft.gsqlparser.sql2xml.model.query_expression_body_union;
-import gudusoft.gsqlparser.sql2xml.model.query_primary;
-import gudusoft.gsqlparser.sql2xml.model.query_specification;
-import gudusoft.gsqlparser.sql2xml.model.query_term;
-import gudusoft.gsqlparser.sql2xml.model.quoted_character_representation;
-import gudusoft.gsqlparser.sql2xml.model.read_only_or_update_of;
-import gudusoft.gsqlparser.sql2xml.model.schema_name;
-import gudusoft.gsqlparser.sql2xml.model.select_list;
-import gudusoft.gsqlparser.sql2xml.model.select_sublist;
-import gudusoft.gsqlparser.sql2xml.model.set_quantifier;
-import gudusoft.gsqlparser.sql2xml.model.sign;
-import gudusoft.gsqlparser.sql2xml.model.simple_table;
-import gudusoft.gsqlparser.sql2xml.model.sort_key;
-import gudusoft.gsqlparser.sql2xml.model.sort_specification;
-import gudusoft.gsqlparser.sql2xml.model.sort_specification_list;
-import gudusoft.gsqlparser.sql2xml.model.string_value_expression;
-import gudusoft.gsqlparser.sql2xml.model.string_value_function;
-import gudusoft.gsqlparser.sql2xml.model.table_expression;
-import gudusoft.gsqlparser.sql2xml.model.table_factor;
-import gudusoft.gsqlparser.sql2xml.model.table_function_derived_table_as_correction_name;
-import gudusoft.gsqlparser.sql2xml.model.table_name;
-import gudusoft.gsqlparser.sql2xml.model.table_or_query_name;
-import gudusoft.gsqlparser.sql2xml.model.table_or_query_name_as_correlation_name;
-import gudusoft.gsqlparser.sql2xml.model.table_primary;
-import gudusoft.gsqlparser.sql2xml.model.table_reference;
-import gudusoft.gsqlparser.sql2xml.model.term;
-import gudusoft.gsqlparser.sql2xml.model.term_asterisk_factor;
-import gudusoft.gsqlparser.sql2xml.model.term_solidus_factor;
-import gudusoft.gsqlparser.sql2xml.model.unicode_character_string_literal;
-import gudusoft.gsqlparser.sql2xml.model.unicode_delimited_identifier;
-import gudusoft.gsqlparser.sql2xml.model.unsigned_literal;
-import gudusoft.gsqlparser.sql2xml.model.unsigned_numeric_literal;
-import gudusoft.gsqlparser.sql2xml.model.unsigned_value_specification;
-import gudusoft.gsqlparser.sql2xml.model.updatability_clause;
-import gudusoft.gsqlparser.sql2xml.model.update_of_clause;
-import gudusoft.gsqlparser.sql2xml.model.update_statement_searched;
-import gudusoft.gsqlparser.sql2xml.model.value_expression;
-import gudusoft.gsqlparser.sql2xml.model.value_expression_primary;
-import gudusoft.gsqlparser.sql2xml.model.with_clause;
+import gudusoft.gsqlparser.sql2xml.model.*;
 import gudusoft.gsqlparser.stmt.TDeleteSqlStatement;
 import gudusoft.gsqlparser.stmt.TInsertSqlStatement;
 import gudusoft.gsqlparser.stmt.TMergeSqlStatement;
@@ -423,6 +337,186 @@ public class AnsiGenerator implements SQL2XMLGenerator
 				convertTableToTableFactor( table, tableFactor );
 			}
 		}
+
+		if ( select.getWhereClause( ) != null
+				&& select.getWhereClause( ).getCondition( ) != null )
+		{
+			where_clause whereClause = new where_clause( );
+			tableExpression.setWhere_clause( whereClause );
+			convertWhereConditionToModel( select.getWhereClause( ), whereClause );
+		}
+	}
+
+	private void convertWhereConditionToModel( TWhereClause whereClause,
+			where_clause whereClauseModel )
+	{
+		boolean_value_expression booleanValueExpression = whereClauseModel.getSearch_condition( )
+				.getBoolean_value_expression( );
+		TExpression condition = whereClause.getCondition( );
+		convertBooleanExpressionToModel( condition, booleanValueExpression );
+	}
+
+	private void convertBooleanExpressionToModel( TExpression condition,
+			boolean_value_expression booleanValueExpression )
+	{
+		if ( condition.getExpressionType( ) == EExpressionType.logical_or_t )
+		{
+			boolean_value_expression_or booleanValueExpressionOr = new boolean_value_expression_or( );
+			booleanValueExpression.setBoolean_value_expression_or( booleanValueExpressionOr );
+			convertOrExpressionToModel( condition, booleanValueExpressionOr );
+		}
+		else
+		{
+			boolean_term booleanTerm = new boolean_term( );
+			booleanValueExpression.setBoolean_term( booleanTerm );
+			convertBooleanExpressionToBooleanTerm( condition, booleanTerm );
+		}
+	}
+
+	private void convertBooleanExpressionToBooleanTerm( TExpression condition,
+			boolean_term booleanTerm )
+	{
+		if ( condition.getExpressionType( ) == EExpressionType.logical_and_t )
+		{
+			boolean_value_expression_and booleanValueExpressionAnd = new boolean_value_expression_and( );
+			booleanTerm.setBoolean_value_expression_and( booleanValueExpressionAnd );
+			convertAndExpressionToModel( condition, booleanValueExpressionAnd );
+		}
+		else
+		{
+			boolean_factor booleanFactor = new boolean_factor( );
+			booleanTerm.setBoolean_factor( booleanFactor );
+			convertBooleanExpressionToBooleanFactor( condition, booleanFactor );
+		}
+	}
+
+	private void convertBooleanExpressionToBooleanFactor(
+			TExpression condition, boolean_factor booleanFactor )
+	{
+		if ( condition.getNotToken( ) != null )
+		{
+			booleanFactor.setKw_not( "not" );
+			convertBooleanExpressionToBooleanTest( condition.getLeftOperand( ),
+					booleanFactor.getBoolean_test( ) );
+		}
+		else
+		{
+			convertBooleanExpressionToBooleanTest( condition,
+					booleanFactor.getBoolean_test( ) );
+		}
+	}
+
+	private void convertBooleanExpressionToBooleanTest( TExpression condition,
+			boolean_test booleanTest )
+	{
+		convertBooleanExpressionToBooleanTest( condition,
+				booleanTest.getBoolean_primary( ) );
+
+	}
+
+	private void convertBooleanExpressionToBooleanTest( TExpression condition,
+			boolean_primary boolean_primary )
+	{
+		switch ( condition.getExpressionType( ) )
+		{
+			case simple_comparison_t :
+				predicate predicate = new predicate( );
+				boolean_primary.setPredicate( predicate );
+				comparison_predicate comparisonPredicate = new comparison_predicate( );
+				predicate.setComparison_predicate( comparisonPredicate );
+				convertComparisonExpressionToComparisonPredicate( condition,
+						comparisonPredicate );
+				break;
+			case in_t :
+				break;
+			case between_t :
+				break;
+			case null_t :
+				break;
+			case exists_t :
+				break;
+		}
+
+	}
+
+	private void convertComparisonExpressionToComparisonPredicate(
+			TExpression condition, comparison_predicate comparisonPredicate )
+	{
+		convertExpressionToRowValuePredicand( condition.getLeftOperand( ),
+				comparisonPredicate.getRow_value_predicand( ) );
+		convertExpressionOperationToCompOp( condition.getComparisonOperator( ),
+				comparisonPredicate.getComparison_predicate_part_2( )
+						.getComp_op( ) );
+		convertExpressionToRowValuePredicand( condition.getRightOperand( ),
+				comparisonPredicate.getComparison_predicate_part_2( )
+						.getRow_value_predicand( ) );
+
+	}
+
+	private void convertExpressionOperationToCompOp(
+			TSourceToken comparisonOperator, comp_op compop )
+	{
+		if ( comparisonOperator.tokencode == (int) '=' )
+		{
+			compop.setEquals_operator( "=" );
+		}
+		else if ( comparisonOperator.tokencode == TBaseType.not_equal )
+		{
+			compop.setNot_equals_operator( "<>" );
+		}
+		else if ( comparisonOperator.tokencode == (int) '>' )
+		{
+			compop.setGreater_than_operator( ">" );
+		}
+		else if ( comparisonOperator.tokencode == (int) '<' )
+		{
+			compop.setLess_than_operator( ">" );
+		}
+		else if ( comparisonOperator.tokencode == TBaseType.less_equal )
+		{
+			compop.setLess_than_or_equals_operator( "<=" );
+		}
+		else if ( comparisonOperator.tokencode == TBaseType.great_equal )
+		{
+			compop.setGreater_than_or_equals_operator( ">=" );
+		}
+	}
+
+	private void convertExpressionToRowValuePredicand( TExpression expression,
+			row_value_predicand rowValuePredicand )
+	{
+		if ( expression.getExpressionType( ) == EExpressionType.simple_constant_t
+				|| expression.getExpressionType( ) == EExpressionType.simple_object_name_t )
+		{
+			row_value_special_case rowValueSpecialCase = new row_value_special_case( );
+			rowValuePredicand.setRow_value_special_case( rowValueSpecialCase );
+			convertExpressionToNonParenthesizedValueExpression( expression,
+					rowValueSpecialCase.getNonparenthesized_value_expression_primary( ) );
+		}
+		else
+		{
+			row_value_constructor_predicand rowValueConstructorPredicand = new row_value_constructor_predicand( );
+			rowValuePredicand.setRow_value_constructor_predicand( rowValueConstructorPredicand );
+		}
+	}
+
+	private void convertAndExpressionToModel( TExpression condition,
+			boolean_value_expression_and booleanValueExpressionAnd )
+	{
+		convertBooleanExpressionToBooleanTerm( condition.getRightOperand( ),
+				booleanValueExpressionAnd.getBoolean_term( ) );
+		convertBooleanExpressionToBooleanFactor( condition.getLeftOperand( ),
+				booleanValueExpressionAnd.getBoolean_factor( ) );
+
+	}
+
+	private void convertOrExpressionToModel( TExpression condition,
+			boolean_value_expression_or booleanValueExpressionOr )
+	{
+		convertBooleanExpressionToModel( condition.getRightOperand( ),
+				booleanValueExpressionOr.getBoolean_value_expression( ) );
+		convertBooleanExpressionToBooleanTerm( condition.getLeftOperand( ),
+				booleanValueExpressionOr.getBoolean_term( ) );
 	}
 
 	private void convertTableToTableFactor( TTable table,
@@ -596,19 +690,18 @@ public class AnsiGenerator implements SQL2XMLGenerator
 						.getResultColumn( i );
 				select_sublist sublist = new select_sublist( );
 				selectSublist.add( sublist );
-				TExpression expression = column.getExpr( );
-				switch ( expression.getExpressionType( ) )
+				if ( column.getFieldAttr( ) != null
+						&& column.getFieldAttr( ).toString( ).endsWith( "*" ) )
 				{
-					case simple_object_name_t :
-						qualified_asterisk qualifiedAsterisk = new qualified_asterisk( );
-						sublist.setQualified_asterisk( qualifiedAsterisk );
-						convertColumnToQualifiedAsterisk( column,
-								qualifiedAsterisk );
-						break;
-					default :
-						derived_column derivedColumn = new derived_column( );
-						sublist.setDerived_column( derivedColumn );
-						convertColumnToDerivedColumn( column, derivedColumn );
+					qualified_asterisk qualifiedAsterisk = new qualified_asterisk( );
+					sublist.setQualified_asterisk( qualifiedAsterisk );
+					convertColumnToQualifiedAsterisk( column, qualifiedAsterisk );
+				}
+				else
+				{
+					derived_column derivedColumn = new derived_column( );
+					sublist.setDerived_column( derivedColumn );
+					convertColumnToDerivedColumn( column, derivedColumn );
 				}
 			}
 		}
@@ -642,6 +735,44 @@ public class AnsiGenerator implements SQL2XMLGenerator
 
 	private void convertColumnToQualifiedAsterisk( TResultColumn column,
 			qualified_asterisk qualifiedAsterisk )
+	{
+		if ( column.getAliasClause( ) != null )
+		{
+			all_fields_reference allFieldsReference = new all_fields_reference( );
+			qualifiedAsterisk.setAll_fields_reference( allFieldsReference );
+			convertResultColumnToAllFieldsReference( column, allFieldsReference );
+		}
+		else
+		{
+			asterisked_identifier_chain_asterisk asteriskedIdentifierChainAsterisk = new asterisked_identifier_chain_asterisk( );
+			qualifiedAsterisk.setAsterisked_identifier_chain_asterisk( asteriskedIdentifierChainAsterisk );
+			convertResultColumnToAsteriskedIdentifierChainAsterisk( column,
+					asteriskedIdentifierChainAsterisk );
+		}
+	}
+
+	private void convertResultColumnToAsteriskedIdentifierChainAsterisk(
+			TResultColumn column,
+			asterisked_identifier_chain_asterisk asteriskedIdentifierChainAsterisk )
+	{
+		List<asterisked_identifier> asteriskedIdentifiers = asteriskedIdentifierChainAsterisk.getAsterisked_identifier_chain( )
+				.getAsterisked_identifier( );
+
+		asterisked_identifier asteriskedIdentifier = new asterisked_identifier( );
+		asteriskedIdentifiers.add( asteriskedIdentifier );
+
+		convertResultColumnToAsteriskedIdentifier( column, asteriskedIdentifier );
+	}
+
+	private void convertResultColumnToAsteriskedIdentifier(
+			TResultColumn column, asterisked_identifier asteriskedIdentifier )
+	{
+		convertObjectName2Model( column.getFieldAttr( ),
+				asteriskedIdentifier.getIdentifier( ) );
+	}
+
+	private void convertResultColumnToAllFieldsReference( TResultColumn column,
+			all_fields_reference allFieldsReference )
 	{
 		// TODO Auto-generated method stub
 
@@ -792,6 +923,13 @@ public class AnsiGenerator implements SQL2XMLGenerator
 					numericValueExpression );
 		}
 		else if ( isStringValueExpression( expression ) )
+		{
+			string_value_expression stringValueExpression = new string_value_expression( );
+			commonValueExpression.setString_value_expression( stringValueExpression );
+			convertExpressionToStringValueExpression( expression,
+					stringValueExpression );
+		}
+		else if ( expression.getExpressionType( ) == EExpressionType.simple_object_name_t )
 		{
 			string_value_expression stringValueExpression = new string_value_expression( );
 			commonValueExpression.setString_value_expression( stringValueExpression );
@@ -1033,9 +1171,74 @@ public class AnsiGenerator implements SQL2XMLGenerator
 				convertExpressionToUnsignedValueSpecification( expression,
 						unsignedValueSpecification );
 				break;
+			case simple_object_name_t :
+				column_reference columnReference = new column_reference( );
+				nonparenthesizedValueExpressionPrimary.setColumn_reference( columnReference );
+				convertExpressionToColumnReference( expression, columnReference );
+				break;
 			default :
 		}
 
+	}
+
+	private void convertExpressionToColumnReference( TExpression expression,
+			column_reference columnReference )
+	{
+		if ( expression.toString( ).toUpperCase( ).startsWith( "MODULE." ) )
+		{
+			module_identifier_chain moduleIdentifierChain = new module_identifier_chain( );
+			columnReference.setModule_identifier_chain( moduleIdentifierChain );
+		}
+		else
+		{
+			basic_identifier_chain basicIdentifierChain = new basic_identifier_chain( );
+			columnReference.setBasic_identifier_chain( basicIdentifierChain );
+			List<identifier> identifiers = basicIdentifierChain.getIdentifier_chain( )
+					.getIdentifier( );
+			convertResultColumnToIdentifierChain( expression, identifiers );
+		}
+	}
+
+	private void convertResultColumnToIdentifierChain( TExpression expression,
+			List<identifier> identifiers )
+	{
+		TObjectName object = expression.getObjectOperand( );
+		if ( object.getServerToken( ) != null )
+		{
+			identifier identifier = new identifier( );
+			identifiers.add( identifier );
+			convertIdentifierToModel( object.getServerToken( ).toString( ),
+					identifier.getActual_identifier( ) );
+		}
+		if ( object.getDatabaseToken( ) != null )
+		{
+			identifier identifier = new identifier( );
+			identifiers.add( identifier );
+			convertIdentifierToModel( object.getDatabaseToken( ).toString( ),
+					identifier.getActual_identifier( ) );
+		}
+		if ( object.getSchemaToken( ) != null )
+		{
+			identifier identifier = new identifier( );
+			identifiers.add( identifier );
+			convertIdentifierToModel( object.getSchemaToken( ).toString( ),
+					identifier.getActual_identifier( ) );
+		}
+
+		if ( object.getObjectToken( ) != null )
+		{
+			identifier identifier = new identifier( );
+			identifiers.add( identifier );
+			convertIdentifierToModel( object.getObjectToken( ).toString( ),
+					identifier.getActual_identifier( ) );
+		}
+		if ( object.getPartToken( ) != null )
+		{
+			identifier identifier = new identifier( );
+			identifiers.add( identifier );
+			convertIdentifierToModel( object.getPartToken( ).toString( ),
+					identifier.getActual_identifier( ) );
+		}
 	}
 
 	private void convertExpressionToUnsignedValueSpecification(
