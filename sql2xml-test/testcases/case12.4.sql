@@ -1,0 +1,1 @@
+SELECT AVG(DISTINCT ListPrice) FROM Production.Product;

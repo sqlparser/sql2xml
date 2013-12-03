@@ -61,6 +61,44 @@ public class Utility
 		return false;
 	}
 
+	
+	static List<String> aggregateFunctions = new ArrayList<String>( );
+	static
+	{
+		aggregateFunctions.add( "COUNT" );
+		aggregateFunctions.add( "AVG" );
+		aggregateFunctions.add( "MAX" );
+		aggregateFunctions.add( "MIN" );
+		aggregateFunctions.add( "SUM" );
+		aggregateFunctions.add( "EVERY" );
+		aggregateFunctions.add( "ANY" );
+		aggregateFunctions.add( "SOME" );
+		aggregateFunctions.add( "STDDEV_POP" );
+		aggregateFunctions.add( "STDDEV_SAMP" );
+		aggregateFunctions.add( "VAR_SAMP" );
+		aggregateFunctions.add( "VAR_POP" );
+		aggregateFunctions.add( "COLLECT" );
+		aggregateFunctions.add( "FUSION" );
+		aggregateFunctions.add( "INTERSECTION" );
+		aggregateFunctions.add( "SORT" );
+		aggregateFunctions.add( "CEIL" );
+		aggregateFunctions.add( "CEILING" );
+		aggregateFunctions.add( "WIDTH_BUCKET" );
+	}
+
+	public static boolean isAggregateFunction( String functionName )
+	{
+		for ( int i = 0; i < aggregateFunctions.size( ); i++ )
+		{
+			if ( aggregateFunctions.get( i ).equalsIgnoreCase( functionName ) )
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
+	
 	public static boolean isNumber( String string )
 	{
 		try

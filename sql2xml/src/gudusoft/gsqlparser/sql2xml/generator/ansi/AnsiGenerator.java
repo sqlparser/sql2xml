@@ -1,6 +1,7 @@
 
 package gudusoft.gsqlparser.sql2xml.generator.ansi;
 
+import gudusoft.gsqlparser.EAggregateType;
 import gudusoft.gsqlparser.EDbVendor;
 import gudusoft.gsqlparser.EExpressionType;
 import gudusoft.gsqlparser.TBaseType;
@@ -12,6 +13,7 @@ import gudusoft.gsqlparser.nodes.TAliasClause;
 import gudusoft.gsqlparser.nodes.TCTEList;
 import gudusoft.gsqlparser.nodes.TExpression;
 import gudusoft.gsqlparser.nodes.TForUpdate;
+import gudusoft.gsqlparser.nodes.TFunctionCall;
 import gudusoft.gsqlparser.nodes.TJoin;
 import gudusoft.gsqlparser.nodes.TJoinItem;
 import gudusoft.gsqlparser.nodes.TJoinItemList;
@@ -1124,10 +1126,23 @@ public class AnsiGenerator implements SQL2XMLGenerator
 	{
 		if ( expression.getExpressionType( ) == EExpressionType.function_t )
 		{
-			numeric_value_function numericValueFunction = new numeric_value_function( );
-			numericPrimary.setNumeric_value_function( numericValueFunction );
-			convertExpressionToNumericValueFunction( expression,
-					numericValueFunction );
+			String functionName = expression.getFunctionCall( )
+					.getFunctionName( )
+					.toString( );
+			if ( Utility.isNumericValueFunction( functionName ) )
+			{
+				numeric_value_function numericValueFunction = new numeric_value_function( );
+				numericPrimary.setNumeric_value_function( numericValueFunction );
+				convertExpressionToNumericValueFunction( expression,
+						numericValueFunction );
+			}
+			else if ( Utility.isAggregateFunction( functionName ) )
+			{
+				value_expression_primary valueExpressionPrimary = new value_expression_primary( );
+				numericPrimary.setValue_expression_primary( valueExpressionPrimary );
+				convertExpressionToValueExpressionPrimary( expression,
+						valueExpressionPrimary );
+			}
 		}
 		else
 		{
@@ -1176,9 +1191,103 @@ public class AnsiGenerator implements SQL2XMLGenerator
 				nonparenthesizedValueExpressionPrimary.setColumn_reference( columnReference );
 				convertExpressionToColumnReference( expression, columnReference );
 				break;
+			case function_t :
+				if ( Utility.isAggregateFunction( expression.getFunctionCall( )
+						.getFunctionName( )
+						.toString( ) ) )
+				{
+					set_function_specification setFunctionSpecification = new set_function_specification( );
+					nonparenthesizedValueExpressionPrimary.setSet_function_specification( setFunctionSpecification );
+					convertExpressionToSetFunction( expression.getFunctionCall( ),
+							setFunctionSpecification );
+				}
+				break;
 			default :
 		}
 
+	}
+
+	private void convertExpressionToSetFunction( TFunctionCall function,
+			set_function_specification setFunctionSpecification )
+	{
+		aggregate_function aggregateFunction = new aggregate_function( );
+		setFunctionSpecification.setAggregate_function( aggregateFunction );
+		convertExpressionToAggregateFunction( function, aggregateFunction );
+	}
+
+	private void convertExpressionToAggregateFunction( TFunctionCall function,
+			aggregate_function aggregateFunction )
+	{
+		if ( function.getFunctionName( ).toString( ).equalsIgnoreCase( "count" )
+				&& function.getArgs( ) != null
+				&& function.getArgs( ).toString( ).trim( ).equals( "*" ) )
+		{
+			aggregate_count aggregateCount = new aggregate_count( );
+			aggregateFunction.setAggregate_count( aggregateCount );
+		}
+		else
+		{
+			aggregate_function_general_set aggregateFunctionGeneralSet = new aggregate_function_general_set( );
+			aggregateFunction.setAggregate_function_general_set( aggregateFunctionGeneralSet );
+			convertExpressionToAggregateFunction( function,
+					aggregateFunctionGeneralSet.getGeneral_set_function( ) );
+		}
+	}
+
+	private void convertExpressionToAggregateFunction( TFunctionCall function,
+			general_set_function general_set_function )
+	{
+		String functionName = function.getFunctionName( ).toString( );
+		computational_operation operation = general_set_function.getSet_function_type( )
+				.getComputational_operation( );
+		if ( functionName.equalsIgnoreCase( "any" ) )
+			operation.setKw_any( "any" );
+		if ( functionName.equalsIgnoreCase( "avg" ) )
+			operation.setKw_avg( "avg" );
+		if ( functionName.equalsIgnoreCase( "collect" ) )
+			operation.setKw_collect( "collect" );
+		if ( functionName.equalsIgnoreCase( "count" ) )
+			operation.setKw_count( "count" );
+		if ( functionName.equalsIgnoreCase( "every" ) )
+			operation.setKw_every( "every" );
+		if ( functionName.equalsIgnoreCase( "fusion" ) )
+			operation.setKw_fusion( "fusion" );
+		if ( functionName.equalsIgnoreCase( "intersection" ) )
+			operation.setKw_intersection( "intersection" );
+		if ( functionName.equalsIgnoreCase( "max" ) )
+			operation.setKw_max( "max" );
+		if ( functionName.equalsIgnoreCase( "min" ) )
+			operation.setKw_min( "min" );
+		if ( functionName.equalsIgnoreCase( "some" ) )
+			operation.setKw_some( "some" );
+		if ( functionName.equalsIgnoreCase( "stddev_pop" ) )
+			operation.setKw_stddev_pop( "stddev_pop" );
+		if ( functionName.equalsIgnoreCase( "stddev_samp" ) )
+			operation.setKw_stddev_samp( "stddev_samp" );
+		if ( functionName.equalsIgnoreCase( "sum" ) )
+			operation.setKw_sum( "sum" );
+		if ( functionName.equalsIgnoreCase( "var_pop" ) )
+			operation.setKw_var_pop( "var_pop" );
+		if ( functionName.equalsIgnoreCase( "var_samp" ) )
+			operation.setKw_var_samp( "var_samp" );
+
+		if ( function.getAggregateType( ) == EAggregateType.distinct )
+		{
+			set_quantifier setQuantifier = new set_quantifier( );
+			general_set_function.setSet_quantifier( setQuantifier );
+			setQuantifier.setKw_distinct( "distinct" );
+		}
+		else if ( function.getAggregateType( ) == EAggregateType.all )
+		{
+			set_quantifier setQuantifier = new set_quantifier( );
+			general_set_function.setSet_quantifier( setQuantifier );
+			setQuantifier.setKw_all( "all" );
+		}
+		value_expression valueExpression = general_set_function.getValue_expression( );
+		common_value_expression commonValueExpression = new common_value_expression( );
+		valueExpression.setCommon_value_expression( commonValueExpression );
+		convertExpressionToCommonValueExpression( function.getArgs( )
+				.getExpression( 0 ), commonValueExpression );
 	}
 
 	private void convertExpressionToColumnReference( TExpression expression,
@@ -1421,7 +1530,8 @@ public class AnsiGenerator implements SQL2XMLGenerator
 			String functionName = expression.getFunctionCall( )
 					.getFunctionName( )
 					.toString( );
-			if ( Utility.isNumericValueFunction( functionName ) )
+			if ( Utility.isNumericValueFunction( functionName )
+					|| Utility.isAggregateFunction( functionName ) )
 			{
 				return true;
 			}
