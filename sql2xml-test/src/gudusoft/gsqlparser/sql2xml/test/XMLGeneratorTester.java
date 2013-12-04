@@ -7,7 +7,6 @@ import gudusoft.gsqlparser.sql2xml.generator.SQL2XMLGeneratorFactory;
 
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.net.URL;
 
@@ -20,22 +19,10 @@ import javax.xml.validation.Validator;
 
 import junit.framework.TestCase;
 
-import org.xml.sax.EntityResolver;
-import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 public class XMLGeneratorTester extends TestCase
 {
-
-	public static class DTDEntityResolver implements EntityResolver
-	{
-
-		public InputSource resolveEntity( String publicId, String systemId )
-				throws SAXException, IOException
-		{
-			return new InputSource( ".\\dtd\\ansi2003.xsd" );
-		}
-	}
 
 	protected void setUp( ) throws Exception
 	{
