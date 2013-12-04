@@ -14,6 +14,8 @@ import gudusoft.gsqlparser.nodes.TCTEList;
 import gudusoft.gsqlparser.nodes.TExpression;
 import gudusoft.gsqlparser.nodes.TForUpdate;
 import gudusoft.gsqlparser.nodes.TFunctionCall;
+import gudusoft.gsqlparser.nodes.TGroupBy;
+import gudusoft.gsqlparser.nodes.TGroupByItem;
 import gudusoft.gsqlparser.nodes.TJoin;
 import gudusoft.gsqlparser.nodes.TJoinItem;
 import gudusoft.gsqlparser.nodes.TJoinItemList;
@@ -22,6 +24,7 @@ import gudusoft.gsqlparser.nodes.TOrderBy;
 import gudusoft.gsqlparser.nodes.TOrderByItem;
 import gudusoft.gsqlparser.nodes.TOrderByItemList;
 import gudusoft.gsqlparser.nodes.TResultColumn;
+import gudusoft.gsqlparser.nodes.TRollupCube;
 import gudusoft.gsqlparser.nodes.TTable;
 import gudusoft.gsqlparser.nodes.TWhereClause;
 import gudusoft.gsqlparser.sql2xml.generator.SQL2XMLGenerator;
@@ -347,6 +350,107 @@ public class AnsiGenerator implements SQL2XMLGenerator
 			tableExpression.setWhere_clause( whereClause );
 			convertWhereConditionToModel( select.getWhereClause( ), whereClause );
 		}
+
+		if ( select.getGroupByClause( ) != null
+				&& select.getGroupByClause( ).getItems( ) != null )
+		{
+			group_by_clause groupByClause = new group_by_clause( );
+			tableExpression.setGroup_by_clause( groupByClause );
+			convertGroupByClauseToModel( select.getGroupByClause( ),
+					groupByClause );
+		}
+
+		if ( select.getGroupByClause( ) != null
+				&& select.getGroupByClause( ).getHavingClause( ) != null )
+		{
+			having_clause havingClause = new having_clause( );
+			tableExpression.setHaving_clause( havingClause );
+			convertHavingClauseToModel( select.getGroupByClause( )
+					.getHavingClause( ), havingClause );
+		}
+	}
+
+	private void convertHavingClauseToModel( TExpression havingClause,
+			having_clause havingClauseModel )
+	{
+		convertBooleanExpressionToModel( havingClause,
+				havingClauseModel.getSearch_condition( )
+						.getBoolean_value_expression( ) );
+
+	}
+
+	private void convertGroupByClauseToModel( TGroupBy groupByClause,
+			group_by_clause groupByClauseModel )
+	{
+		if ( groupByClause.getItems( ).size( ) > 0 )
+		{
+			if ( SourceTokenSearcher.indexOf( groupByClause.getStartToken( ).container,
+					groupByClause.getStartToken( ).posinlist,
+					groupByClause.getItems( )
+							.getGroupByItem( 0 )
+							.getStartToken( ).posinlist,
+					"ALL" ) != -1 )
+			{
+				set_quantifier setQuantifier = new set_quantifier( );
+				setQuantifier.setKw_all( "all" );
+				groupByClauseModel.setSet_quantifier( setQuantifier );
+			}
+		}
+
+		List<grouping_element> groupingElements = groupByClauseModel.getGrouping_element_list( )
+				.getGrouping_element( );
+		for ( int i = 0; i < groupByClause.getItems( ).size( ); i++ )
+		{
+			TGroupByItem item = groupByClause.getItems( ).getGroupByItem( i );
+			grouping_element groupingElement = new grouping_element( );
+			groupingElements.add( groupingElement );
+			convertGroupItemToModel( item, groupingElement );
+		}
+	}
+
+	private void convertGroupItemToModel( TGroupByItem item,
+			grouping_element groupingElement )
+	{
+		if ( item.getRollupCube( ) != null )
+		{
+
+		}
+		else if ( item.getGroupingSet( ) != null )
+		{
+
+		}
+		else
+		{
+			ordinary_grouping_set ordinaryGroupingSet = new ordinary_grouping_set( );
+			groupingElement.setOrdinary_grouping_set( ordinaryGroupingSet );
+			convertGroupItemToOrdinaryGroupingSet( item, ordinaryGroupingSet );
+		}
+	}
+
+	private void convertGroupItemToOrdinaryGroupingSet( TGroupByItem item,
+			ordinary_grouping_set ordinaryGroupingSet )
+	{
+		String groupItemString = item.toString( ).trim( );
+		if ( groupItemString.startsWith( "(" )
+				&& groupItemString.endsWith( ")" ) )
+		{
+			grouping_column_reference_list_with_paren groupingColumnReferenceListWithParen = new grouping_column_reference_list_with_paren( );
+			ordinaryGroupingSet.setGrouping_column_reference_list_with_paren( groupingColumnReferenceListWithParen );
+			List<grouping_column_reference> groupingColumnReferences = groupingColumnReferenceListWithParen.getGrouping_column_reference_list( )
+					.getGrouping_column_reference( );
+			grouping_column_reference groupingColumnReference = new grouping_column_reference( );
+			groupingColumnReferences.add( groupingColumnReference );
+			convertExpressionToColumnReference( item.getExpr( )
+					.getLeftOperand( ),
+					groupingColumnReference.getColumn_reference( ) );
+		}
+		else
+		{
+			grouping_column_reference groupingColumnReference = new grouping_column_reference( );
+			ordinaryGroupingSet.setGrouping_column_reference( groupingColumnReference );
+			convertExpressionToColumnReference( item.getExpr( ),
+					groupingColumnReference.getColumn_reference( ) );
+		}
 	}
 
 	private void convertWhereConditionToModel( TWhereClause whereClause,
@@ -489,6 +593,16 @@ public class AnsiGenerator implements SQL2XMLGenerator
 	{
 		if ( expression.getExpressionType( ) == EExpressionType.simple_constant_t
 				|| expression.getExpressionType( ) == EExpressionType.simple_object_name_t )
+		{
+			row_value_special_case rowValueSpecialCase = new row_value_special_case( );
+			rowValuePredicand.setRow_value_special_case( rowValueSpecialCase );
+			convertExpressionToNonParenthesizedValueExpression( expression,
+					rowValueSpecialCase.getNonparenthesized_value_expression_primary( ) );
+		}
+		else if ( expression.getExpressionType( ) == EExpressionType.function_t
+				&& ( Utility.isAggregateFunction( expression.getFunctionCall( )
+						.getFunctionName( )
+						.toString( ) ) ) )
 		{
 			row_value_special_case rowValueSpecialCase = new row_value_special_case( );
 			rowValuePredicand.setRow_value_special_case( rowValueSpecialCase );
@@ -1219,8 +1333,10 @@ public class AnsiGenerator implements SQL2XMLGenerator
 			aggregate_function aggregateFunction )
 	{
 		if ( function.getFunctionName( ).toString( ).equalsIgnoreCase( "count" )
-				&& function.getArgs( ) != null
-				&& function.getArgs( ).toString( ).trim( ).equals( "*" ) )
+				&& ( function.getArgs( ) == null || function.getArgs( )
+						.toString( )
+						.trim( )
+						.equals( "*" ) ) )
 		{
 			aggregate_count aggregateCount = new aggregate_count( );
 			aggregateFunction.setAggregate_count( aggregateCount );
