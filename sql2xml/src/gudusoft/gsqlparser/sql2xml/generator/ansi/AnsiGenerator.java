@@ -998,11 +998,13 @@ public class AnsiGenerator implements SQL2XMLGenerator
 			if ( item.getSortType( ) == TBaseType.srtAsc )
 			{
 				ordering_specification orderingSpecification = new ordering_specification( );
+				orderingSpecification.setKw_asc( "asc" );
 				sortSpecification.setOrdering_specification( orderingSpecification );
 			}
 			else if ( item.getSortType( ) == TBaseType.srtDesc )
 			{
 				ordering_specification orderingSpecification = new ordering_specification( );
+				orderingSpecification.setKw_desc( "desc" );
 				sortSpecification.setOrdering_specification( orderingSpecification );
 			}
 

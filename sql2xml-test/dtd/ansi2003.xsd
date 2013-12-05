@@ -7351,10 +7351,10 @@
 
 <xs:element name="ordering_specification">
 	<xs:complexType>
-		<xs:sequence>
+		<xs:choice>
 			<xs:element ref="kw_asc"/>
 			<xs:element ref="kw_desc"/>
-		</xs:sequence>
+		</xs:choice>
 	</xs:complexType>
 </xs:element>
 
@@ -7376,7 +7376,7 @@
 	
 <xs:element name="null_ordering">
 	<xs:complexType>
-		<xs:sequence>
+		<xs:choice>
 			<xs:element name="kw_nulls_first">
 				<xs:complexType>
 					<xs:sequence>
@@ -7393,7 +7393,7 @@
 					</xs:sequence>
 				</xs:complexType>
 			</xs:element>
-		</xs:sequence>
+		</xs:choice>
 	</xs:complexType>
 </xs:element>
 
