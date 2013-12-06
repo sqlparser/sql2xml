@@ -7354,7 +7354,7 @@
 		<xs:choice>
 			<xs:element ref="kw_asc"/>
 			<xs:element ref="kw_desc"/>
-		</xs:sequence>
+		</xs:choice>
 	</xs:complexType>
 </xs:element>
 
@@ -7393,7 +7393,7 @@
 					</xs:sequence>
 				</xs:complexType>
 			</xs:element>
-		</xs:sequence>
+		</xs:choice>
 	</xs:complexType>
 </xs:element>
 
