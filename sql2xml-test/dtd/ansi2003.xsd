@@ -1415,9 +1415,9 @@
 	<xs:complexType>
 		<xs:sequence>
 			<xs:element ref="hours_value"/>
-			<xs:element ref="minus_sign"/>
+			<xs:element ref="colon"/>
 			<xs:element ref="minutes_value"/>
-			<xs:element ref="minus_sign"/>
+			<xs:element ref="colon"/>
 			<xs:element ref="seconds_value"/>
 		</xs:sequence>
 	</xs:complexType>

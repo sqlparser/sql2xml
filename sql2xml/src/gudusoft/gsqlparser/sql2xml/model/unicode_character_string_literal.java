@@ -14,7 +14,7 @@ public class unicode_character_string_literal
 	private introducer_character_set_specification introducer_character_set_specification;
 
 	@Element
-	private String ampersand = "&amp;";
+	private String ampersand = "&";
 
 	@ElementList(entry = "quoted_character_representation", inline = true)
 	private List<quoted_character_representation> quoted_character_representation = new ArrayList<quoted_character_representation>( );

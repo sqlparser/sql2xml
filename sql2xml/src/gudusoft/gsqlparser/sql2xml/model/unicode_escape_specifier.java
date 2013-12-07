@@ -2,18 +2,22 @@
 package gudusoft.gsqlparser.sql2xml.model;
 
 import org.simpleframework.xml.Element;
+import org.simpleframework.xml.Path;
+import org.simpleframework.xml.Text;
 
 public class unicode_escape_specifier
 {
 
-	@Element(name = "double_quote")
-	private String left_double_quote = "&quot;";
+	@Path("double_quote[1]")
+	@Text
+	private String left_double_quote = "\"";
 
 	@Element
 	private String unicode_escape_character;
 
-	@Element(name = "double_quote")
-	private String right_double_quote = "&quot;";
+	@Path("double_quote[2]")
+	@Text
+	private String right_double_quote = "\"";
 
 	public String getUnicode_escape_character( )
 	{

@@ -10,6 +10,7 @@ import gudusoft.gsqlparser.stmt.TUpdateSqlStatement;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 
 public class Utility
 {
@@ -61,7 +62,6 @@ public class Utility
 		return false;
 	}
 
-	
 	static List<String> aggregateFunctions = new ArrayList<String>( );
 	static
 	{
@@ -98,7 +98,6 @@ public class Utility
 		return false;
 	}
 
-	
 	public static boolean isNumber( String string )
 	{
 		try
@@ -176,6 +175,38 @@ public class Utility
 
 	public static boolean isUnicodeString( String string )
 	{
+		return false;
+	}
+
+	public static boolean isDateTypeValue( String string )
+	{
+		if ( string == null )
+			return false;
+		if ( string.trim( ).matches( "(?i)((Date)|(d)|(TIME)|(TIMESTAMP))\\s*'.+?'" ) )
+			return true;
+		return false;
+	}
+
+	static List<String> dateTypeValueFunctions = new ArrayList<String>( );
+	static
+	{
+		dateTypeValueFunctions.add( "CURRENT_DATE" );
+		dateTypeValueFunctions.add( "CURRENT_TIME" );
+		dateTypeValueFunctions.add( "CURRENT_TIMESTAMP" );
+		dateTypeValueFunctions.add( "LOCALTIME" );
+		dateTypeValueFunctions.add( "LOCALTIMESTAMP" );
+	}
+
+	public static boolean isDateTypeValueFunction( String functionName )
+	{
+		for ( int i = 0; i < dateTypeValueFunctions.size( ); i++ )
+		{
+			if ( dateTypeValueFunctions.get( i )
+					.equalsIgnoreCase( functionName ) )
+			{
+				return true;
+			}
+		}
 		return false;
 	}
 }

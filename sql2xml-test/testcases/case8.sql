@@ -1,0 +1,1 @@
+select timestamp '2013-09-10 21:15:23 -8:10' from dual

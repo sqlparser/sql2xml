@@ -35,7 +35,7 @@ public class XMLGeneratorTester extends TestCase
 			String caseName = testcase.getName( );
 			if ( caseName.toLowerCase( ).endsWith( ".sql" ) )
 			{
-				String result = generator.generateXML( testcase );
+				String result = generator.generateXML( EDbVendor.dbvoracle, testcase );
 				if ( result == null )
 				{
 					System.err.println( generator.getErrorMessage( ) );

@@ -24,7 +24,6 @@ import gudusoft.gsqlparser.nodes.TOrderBy;
 import gudusoft.gsqlparser.nodes.TOrderByItem;
 import gudusoft.gsqlparser.nodes.TOrderByItemList;
 import gudusoft.gsqlparser.nodes.TResultColumn;
-import gudusoft.gsqlparser.nodes.TRollupCube;
 import gudusoft.gsqlparser.nodes.TTable;
 import gudusoft.gsqlparser.nodes.TWhereClause;
 import gudusoft.gsqlparser.sql2xml.generator.SQL2XMLGenerator;
@@ -1033,7 +1032,14 @@ public class AnsiGenerator implements SQL2XMLGenerator
 			TExpression expression,
 			common_value_expression commonValueExpression )
 	{
-		if ( isNumericValueExpression( expression ) )
+		if ( isDateTypeValueExpression( expression ) )
+		{
+			datetime_value_expression datetimeValueExpression = new datetime_value_expression( );
+			commonValueExpression.setDatetime_value_expression( datetimeValueExpression );
+			convertExpressionToDatetimeValueExpression( expression,
+					datetimeValueExpression );
+		}
+		else if ( isNumericValueExpression( expression ) )
 		{
 			numeric_value_expression numericValueExpression = new numeric_value_expression( );
 			commonValueExpression.setNumeric_value_expression( numericValueExpression );
@@ -1055,6 +1061,74 @@ public class AnsiGenerator implements SQL2XMLGenerator
 					stringValueExpression );
 		}
 
+	}
+
+	private void convertExpressionToDatetimeValueExpression(
+			TExpression expression,
+			datetime_value_expression datetimeValueExpression )
+	{
+		// FIXME simple deal with the date time case.
+		datetime_term datetimeTerm = new datetime_term( );
+		datetimeValueExpression.setDatetime_term( datetimeTerm );
+		convertExpressionToDateTimeFactor( expression,
+				datetimeTerm.getDatetime_factor( ) );
+	}
+
+	private void convertExpressionToDateTimeFactor( TExpression expression,
+			datetime_factor datetime_factor )
+	{
+		convertExpressionToDateTimePrimary( expression,
+				datetime_factor.getDatetime_primary( ) );
+		// FIXME ingore time zone here.
+	}
+
+	private void convertExpressionToDateTimePrimary( TExpression expression,
+			datetime_primary datetime_primary )
+	{
+		if ( expression.getExpressionType( ) == EExpressionType.simple_constant_t )
+		{
+			value_expression_primary valueExpressionPrimary = new value_expression_primary( );
+			datetime_primary.setValue_expression_primary( valueExpressionPrimary );
+			convertExpressionToValueExpressionPrimary( expression,
+					valueExpressionPrimary );
+		}
+		else if ( expression.getExpressionType( ) == EExpressionType.function_t )
+		{
+			datetime_value_function datetimeValueFunction = new datetime_value_function( );
+			datetime_primary.setDatetime_value_function( datetimeValueFunction );
+			convertExpressionToDateTimeValueFunction( expression,
+					datetimeValueFunction );
+		}
+	}
+
+	private void convertExpressionToDateTimeValueFunction(
+			TExpression expression,
+			datetime_value_function datetimeValueFunction )
+	{
+		// TODO Auto-generated method stub
+
+	}
+
+	private boolean isDateTypeValueExpression( TExpression expression )
+	{
+		if ( expression.getExpressionType( ) == EExpressionType.simple_constant_t )
+		{
+			if ( Utility.isDateTypeValue( expression.toString( ) ) )
+			{
+				return true;
+			}
+		}
+		else if ( expression.getExpressionType( ) == EExpressionType.function_t )
+		{
+			String functionName = expression.getFunctionCall( )
+					.getFunctionName( )
+					.toString( );
+			if ( Utility.isDateTypeValueFunction( functionName ) )
+			{
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private void convertExpressionToStringValueExpression(
@@ -1505,7 +1579,13 @@ public class AnsiGenerator implements SQL2XMLGenerator
 	private void convertExpressionToGeneralLiteral( TExpression expression,
 			general_literal generalLiteral )
 	{
-		if ( Utility.isString( expression.toString( ) ) )
+		if ( Utility.isDateTypeValue( expression.toString( ) ) )
+		{
+			datetime_literal datetimeLiteral = new datetime_literal( );
+			generalLiteral.setDatetime_literal( datetimeLiteral );
+			convertExpressionToDatetimeLiteral( expression, datetimeLiteral );
+		}
+		else if ( Utility.isString( expression.toString( ) ) )
 		{
 			if ( Utility.isNationalString( expression.toString( ) ) )
 			{
@@ -1530,6 +1610,169 @@ public class AnsiGenerator implements SQL2XMLGenerator
 			}
 		}
 
+	}
+
+	private void convertExpressionToDatetimeLiteral( TExpression expression,
+			datetime_literal datetimeLiteral )
+	{
+		String expressionContent = expression.toString( ).trim( ).toUpperCase( );
+		if ( expressionContent.startsWith( "TIMESTAMP" ) )
+		{
+			timestamp_literal timestampLiteral = new timestamp_literal( );
+			datetimeLiteral.setTimestamp_literal( timestampLiteral );
+			String timestamp = expressionContent.substring( expressionContent.indexOf( "'" ) + 1,
+					expressionContent.length( ) - 1 );
+			convertStringToTimestampString( timestamp,
+					timestampLiteral.getTimestamp_string( )
+							.getUnquoted_timestamp_string( ) );
+		}
+		else if ( expressionContent.startsWith( "TIME" ) )
+		{
+			time_literal timeLiteral = new time_literal( );
+			datetimeLiteral.setTime_literal( timeLiteral );
+			String time = expressionContent.substring( expressionContent.indexOf( "'" ) + 1,
+					expressionContent.length( ) - 1 );
+			convertStringToTimeString( time, timeLiteral.getTime_string( )
+					.getUnquoted_time_string( ) );
+		}
+		else
+		{
+			date_literal dateLiteral = new date_literal( );
+			datetimeLiteral.setDate_literal( dateLiteral );
+			String date = expressionContent.substring( expressionContent.indexOf( "'" ) + 1,
+					expressionContent.length( ) - 1 );
+			convertStringToDateString( date, dateLiteral.getDate_string( )
+					.getUnquoted_date_string( ) );
+		}
+
+	}
+
+	private void convertStringToTimeString( String time,
+			unquoted_time_string unquoted_time_string )
+	{
+		String[] splits = time.trim( ).split( "\\s+" );
+		if ( splits.length > 0 )
+		{
+			convertStringToTimeValue( splits[0],
+					unquoted_time_string.getTime_value( ) );
+		}
+		if ( splits.length > 1 )
+		{
+			time_zone_interval timeZoneInterval = new time_zone_interval( );
+			unquoted_time_string.setTime_zone_interval( timeZoneInterval );
+			convertStringTotimeZoneInterval( splits[1], timeZoneInterval );
+		}
+	}
+
+	private void convertStringTotimeZoneInterval( String string,
+			time_zone_interval timeZoneInterval )
+	{
+		String[] splits = string.split( "\\:" );
+		if ( splits.length > 0 )
+		{
+			String hour = splits[0];
+			if ( hour.startsWith( "-" ) )
+			{
+				timeZoneInterval.getSign( ).setMinus_sign( "-" );
+				timeZoneInterval.getHours_value( )
+						.getDatetime_value( )
+						.setUnsigned_integer( splits[0].substring( 1 ) );
+			}
+			else if ( hour.startsWith( "+" ) )
+			{
+				timeZoneInterval.getSign( ).setPlus_sign( "+" );
+				timeZoneInterval.getHours_value( )
+						.getDatetime_value( )
+						.setUnsigned_integer( splits[0].substring( 1 ) );
+			}
+			else
+			{
+				timeZoneInterval.getSign( ).setPlus_sign( "+" );
+				timeZoneInterval.getHours_value( )
+						.getDatetime_value( )
+						.setUnsigned_integer( splits[0] );
+			}
+		}
+		if ( splits.length > 1 )
+		{
+			timeZoneInterval.getMinutes_value( )
+					.getDatetime_value( )
+					.setUnsigned_integer( splits[1] );
+		}
+
+	}
+
+	private void convertStringToTimeValue( String string, time_value time_value )
+	{
+		String[] splits = string.split( "\\:" );
+		if ( splits.length > 0 )
+		{
+			time_value.getHours_value( )
+					.getDatetime_value( )
+					.setUnsigned_integer( splits[0] );
+		}
+		if ( splits.length > 1 )
+		{
+			time_value.getMinutes_value( )
+					.getDatetime_value( )
+					.setUnsigned_integer( splits[1] );
+		}
+		if ( splits.length > 2 )
+		{
+			time_value.getSeconds_value( )
+					.getDatetime_value( )
+					.setUnsigned_integer( splits[2] );
+		}
+
+	}
+
+	private void convertStringToTimestampString( String timestamp,
+			unquoted_timestamp_string unquoted_timestamp_string )
+	{
+		String[] splits = timestamp.trim( ).split( "\\s+" );
+		if ( splits.length > 0 )
+		{
+			convertStringToDateString( splits[0],
+					unquoted_timestamp_string.getUnquoted_date_string( ) );
+		}
+		if ( splits.length > 1 )
+		{
+			String time = splits[1];
+			if ( splits.length > 2 )
+			{
+				time += " ";
+				time += splits[2];
+			}
+			convertStringToTimeString( time,
+					unquoted_timestamp_string.getUnquoted_time_string( ) );
+		}
+	}
+
+	private void convertStringToDateString( String date,
+			unquoted_date_string unquoted_date_string )
+	{
+		String[] splits = date.split( "\\-" );
+		if ( splits.length > 0 )
+		{
+			unquoted_date_string.getDate_value( )
+					.getYears_value( )
+					.getDatetime_value( )
+					.setUnsigned_integer( splits[0] );
+		}
+		if ( splits.length > 1 )
+		{
+			unquoted_date_string.getDate_value( )
+					.getMonths_value( )
+					.getDatetime_value( )
+					.setUnsigned_integer( splits[1] );
+		}
+		if ( splits.length > 2 )
+		{
+			unquoted_date_string.getDate_value( )
+					.getDays_value( )
+					.getDatetime_value( )
+					.setUnsigned_integer( splits[2] );
+		}
 	}
 
 	private void convertExpressionToCharacterStringLiteral(

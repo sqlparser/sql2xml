@@ -1,0 +1,1 @@
+select date '2012-02-03' from dual
