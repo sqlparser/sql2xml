@@ -10075,7 +10075,7 @@
 <xs:element name="kw_row_number">
 	<xs:simpleType>
 			<xs:restriction base="xs:string">
-				<xs:enumeration value="row number"/>
+				<xs:enumeration value="row_number"/>
 			</xs:restriction>
 	</xs:simpleType>
 </xs:element>
@@ -10084,7 +10084,7 @@
 <xs:element name="kw_timezone_hour">
 	<xs:simpleType>
 			<xs:restriction base="xs:string">
-				<xs:enumeration value="timezone hour"/>
+				<xs:enumeration value="timezone_hour"/>
 			</xs:restriction>
 	</xs:simpleType>
 </xs:element>
@@ -10093,7 +10093,7 @@
 <xs:element name="kw_timezone_minute">
 	<xs:simpleType>
 			<xs:restriction base="xs:string">
-				<xs:enumeration value="timezone minute"/>
+				<xs:enumeration value="timezone_minute"/>
 			</xs:restriction>
 	</xs:simpleType>
 </xs:element>
@@ -10102,7 +10102,7 @@
 <xs:element name="kw_current_date">
 	<xs:simpleType>
 			<xs:restriction base="xs:string">
-				<xs:enumeration value="current date"/>
+				<xs:enumeration value="current_date"/>
 			</xs:restriction>
 	</xs:simpleType>
 </xs:element>
@@ -10111,7 +10111,7 @@
 <xs:element name="kw_percentile_cont">
 	<xs:simpleType>
 			<xs:restriction base="xs:string">
-				<xs:enumeration value="percentile cont"/>
+				<xs:enumeration value="percentile_cont"/>
 			</xs:restriction>
 	</xs:simpleType>
 </xs:element>
@@ -10120,7 +10120,7 @@
 <xs:element name="kw_percentile_disc">
 	<xs:simpleType>
 			<xs:restriction base="xs:string">
-				<xs:enumeration value="percentile disc"/>
+				<xs:enumeration value="percentile_disc"/>
 			</xs:restriction>
 	</xs:simpleType>
 </xs:element>

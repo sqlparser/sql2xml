@@ -1067,11 +1067,76 @@ public class AnsiGenerator implements SQL2XMLGenerator
 			TExpression expression,
 			datetime_value_expression datetimeValueExpression )
 	{
-		// FIXME simple deal with the date time case.
-		datetime_term datetimeTerm = new datetime_term( );
-		datetimeValueExpression.setDatetime_term( datetimeTerm );
-		convertExpressionToDateTimeFactor( expression,
-				datetimeTerm.getDatetime_factor( ) );
+		if ( expression.getExpressionType( ) == EExpressionType.arithmetic_plus_t )
+		{
+			if ( isDateTypeValueExpression( expression.getLeftOperand( ) ) )
+			{
+				datetime_value_expression_plus_interval_term datetimeValuePlusExpression = new datetime_value_expression_plus_interval_term( );
+				datetimeValueExpression.setDatetime_value_expression_plus_interval_term( datetimeValuePlusExpression );
+				convertExpressionToDatetimeValueExpression( expression.getLeftOperand( ),
+						datetimeValuePlusExpression.getDatetime_value_expression( ) );
+				convertExpressionToIntervalTerm( expression.getRightOperand( ),
+						datetimeValuePlusExpression.getInterval_term( ) );
+			}
+		}
+		else if ( expression.getExpressionType( ) == EExpressionType.arithmetic_minus_t )
+		{
+			if ( isDateTypeValueExpression( expression.getLeftOperand( ) ) )
+			{
+				datetime_value_expression_minus_interval_term datetimeValueMinusExpression = new datetime_value_expression_minus_interval_term( );
+				datetimeValueExpression.setDatetime_value_expression_minus_interval_term( datetimeValueMinusExpression );
+				convertExpressionToDatetimeValueExpression( expression.getLeftOperand( ),
+						datetimeValueMinusExpression.getDatetime_value_expression( ) );
+				convertExpressionToIntervalTerm( expression.getRightOperand( ),
+						datetimeValueMinusExpression.getInterval_term( ) );
+			}
+		}
+		else
+		{
+			datetime_term datetimeTerm = new datetime_term( );
+			datetimeValueExpression.setDatetime_term( datetimeTerm );
+			convertExpressionToDateTimeFactor( expression,
+					datetimeTerm.getDatetime_factor( ) );
+		}
+	}
+
+	private void convertExpressionToIntervalTerm( TExpression expression,
+			interval_term interval_term )
+	{
+		if ( expression.getExpressionType( ) == EExpressionType.arithmetic_plus_t )
+		{
+			interval_factor intervalFactor = new interval_factor( );
+			interval_term.setInterval_factor( intervalFactor );
+		}
+		else if ( expression.getExpressionType( ) == EExpressionType.arithmetic_minus_t )
+		{
+			interval_factor intervalFactor = new interval_factor( );
+			interval_term.setInterval_factor( intervalFactor );
+		}
+		else if ( expression.getExpressionType( ) == EExpressionType.arithmetic_divide_t )
+		{
+			interval_term_solidus intervalTermSolidus = new interval_term_solidus( );
+			interval_term.setInterval_term_solidus( intervalTermSolidus );
+		}
+		else if ( expression.getExpressionType( ) == EExpressionType.arithmetic_times_t )
+		{
+			interval_term_asterisk intervalTermAsterisk = new interval_term_asterisk( );
+			interval_term.setInterval_term_asterisk( intervalTermAsterisk );
+		}
+		else if ( expression.getExpressionType( ) == EExpressionType.simple_constant_t )
+		{
+			interval_factor intervalFactor = new interval_factor( );
+			interval_term.setInterval_factor( intervalFactor );
+			value_expression_primary_interval_qualifier value_expression_primary_interval_qualifier = new value_expression_primary_interval_qualifier( );
+			intervalFactor.getInterval_primary( )
+					.setValue_expression_primary_interval_qualifier( value_expression_primary_interval_qualifier );
+			convertExpressionToValueExpressionPrimary( expression,
+					value_expression_primary_interval_qualifier.getValue_expression_primary( ) );
+		}
+		else
+		{
+
+		}
 	}
 
 	private void convertExpressionToDateTimeFactor( TExpression expression,
@@ -1099,19 +1164,58 @@ public class AnsiGenerator implements SQL2XMLGenerator
 			convertExpressionToDateTimeValueFunction( expression,
 					datetimeValueFunction );
 		}
+		else if ( expression.getExpressionType( ) == EExpressionType.simple_object_name_t )
+		{
+			datetime_value_function datetimeValueFunction = new datetime_value_function( );
+			datetime_primary.setDatetime_value_function( datetimeValueFunction );
+			convertExpressionToDateTimeValueFunction( expression,
+					datetimeValueFunction );
+		}
 	}
 
 	private void convertExpressionToDateTimeValueFunction(
 			TExpression expression,
 			datetime_value_function datetimeValueFunction )
 	{
-		// TODO Auto-generated method stub
-
+		String expressionContent = expression.toString( ).trim( ).toUpperCase( );
+		if ( "CURRENT_DATE".equals( expressionContent ) )
+		{
+			current_date_value_function current_date_value_function = new current_date_value_function( );
+			datetimeValueFunction.setCurrent_date_value_function( current_date_value_function );
+		}
+		else if ( "CURRENT_TIME".equals( expressionContent ) )
+		{
+			current_time_value_function current_time_value_function = new current_time_value_function( );
+			datetimeValueFunction.setCurrent_time_value_function( current_time_value_function );
+		}
+		else if ( expressionContent.startsWith( "CURRENT_TIMESTAMP" ) )
+		{
+			current_timestamp_value_function current_timestamp_value_function = new current_timestamp_value_function( );
+			datetimeValueFunction.setCurrent_timestamp_value_function( current_timestamp_value_function );
+		}
+		else if ( expressionContent.startsWith( "LOCALTIME" ) )
+		{
+			current_local_time_value_function current_local_time_value_function = new current_local_time_value_function( );
+			datetimeValueFunction.setCurrent_local_time_value_function( current_local_time_value_function );
+		}
+		else if ( expressionContent.startsWith( "LOCALTIMESTAMP" ) )
+		{
+			current_local_timestamp_value_function current_local_timestamp_value_function = new current_local_timestamp_value_function( );
+			datetimeValueFunction.setCurrent_local_timestamp_value_function( current_local_timestamp_value_function );
+		}
 	}
 
 	private boolean isDateTypeValueExpression( TExpression expression )
 	{
-		if ( expression.getExpressionType( ) == EExpressionType.simple_constant_t )
+		if ( expression.getExpressionType( ) == EExpressionType.arithmetic_plus_t
+				|| expression.getExpressionType( ) == EExpressionType.arithmetic_minus_t )
+		{
+			if ( expression.getLeftOperand( ) != null )
+				return isDateTypeValueExpression( expression.getLeftOperand( ) );
+			else
+				return false;
+		}
+		else if ( expression.getExpressionType( ) == EExpressionType.simple_constant_t )
 		{
 			if ( Utility.isDateTypeValue( expression.toString( ) ) )
 			{
@@ -1123,6 +1227,14 @@ public class AnsiGenerator implements SQL2XMLGenerator
 			String functionName = expression.getFunctionCall( )
 					.getFunctionName( )
 					.toString( );
+			if ( Utility.isDateTypeValueFunction( functionName ) )
+			{
+				return true;
+			}
+		}
+		else if ( expression.getExpressionType( ) == EExpressionType.simple_object_name_t )
+		{
+			String functionName = expression.toString( );
 			if ( Utility.isDateTypeValueFunction( functionName ) )
 			{
 				return true;
@@ -1877,6 +1989,12 @@ public class AnsiGenerator implements SQL2XMLGenerator
 				|| expression.getExpressionType( ) == EExpressionType.unary_plus_t
 				|| expression.getExpressionType( ) == EExpressionType.unary_minus_t )
 		{
+			if ( expression.getLeftOperand( ) != null )
+			{
+				boolean isDateType = isDateTypeValueExpression( expression.getLeftOperand( ) );
+				if ( isDateType )
+					return false;
+			}
 			return true;
 		}
 		else if ( expression.getExpressionType( ) == EExpressionType.simple_constant_t )

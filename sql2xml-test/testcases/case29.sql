@@ -1,0 +1,1 @@
+select current_date + 1 from dual;
