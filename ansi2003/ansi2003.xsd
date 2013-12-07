@@ -2262,27 +2262,27 @@
 	
 <xs:element name="join_condition">
 	<xs:complexType>
-		<xs:choice>
+		<xs:sequence>
 			<xs:element ref="kw_on"/>
 			<xs:element ref="search_condition"/>
-		</xs:choice>
+		</xs:sequence>
 	</xs:complexType>
 </xs:element>
 
 <xs:element name="named_column_condition">
 	<xs:complexType>
-		<xs:choice>
+		<xs:sequence>
 			<xs:element ref="kw_using"/>
 			<xs:element ref="join_column_list"/>
-		</xs:choice>
+		</xs:sequence>
 	</xs:complexType>
 </xs:element>
 
 <xs:element name="join_column_list">
 	<xs:complexType>
-		<xs:choice>
+		<xs:sequence>
 			<xs:element ref="column_name_list"/>
-		</xs:choice>
+		</xs:sequence>
 	</xs:complexType>
 </xs:element>
 

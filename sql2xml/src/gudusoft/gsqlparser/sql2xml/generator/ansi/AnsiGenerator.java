@@ -4,6 +4,7 @@ package gudusoft.gsqlparser.sql2xml.generator.ansi;
 import gudusoft.gsqlparser.EAggregateType;
 import gudusoft.gsqlparser.EDbVendor;
 import gudusoft.gsqlparser.EExpressionType;
+import gudusoft.gsqlparser.EJoinType;
 import gudusoft.gsqlparser.TBaseType;
 import gudusoft.gsqlparser.TCustomSqlStatement;
 import gudusoft.gsqlparser.TGSqlParser;
@@ -20,6 +21,7 @@ import gudusoft.gsqlparser.nodes.TJoin;
 import gudusoft.gsqlparser.nodes.TJoinItem;
 import gudusoft.gsqlparser.nodes.TJoinItemList;
 import gudusoft.gsqlparser.nodes.TObjectName;
+import gudusoft.gsqlparser.nodes.TObjectNameList;
 import gudusoft.gsqlparser.nodes.TOrderBy;
 import gudusoft.gsqlparser.nodes.TOrderByItem;
 import gudusoft.gsqlparser.nodes.TOrderByItemList;
@@ -320,8 +322,7 @@ public class AnsiGenerator implements SQL2XMLGenerator
 		List<table_reference> tableReferences = from_clause.getTable_reference( );
 		for ( int i = 0; i < select.joins.size( ); i++ )
 		{
-			table_reference tableReference = new table_reference( );
-			tableReferences.add( tableReference );
+
 			TJoin join = select.joins.getJoin( i );
 			TTable table = join.getTable( );
 			TJoinItemList items = join.getJoinItems( );
@@ -330,12 +331,17 @@ public class AnsiGenerator implements SQL2XMLGenerator
 				for ( int j = 0; j < items.size( ); j++ )
 				{
 					TJoinItem item = items.getJoinItem( j );
-					TTable joinTable = item.getTable( );
+					table_reference tableReference = new table_reference( );
+					tableReferences.add( tableReference );
+					joined_table joinedTable = new joined_table( );
+					tableReference.setJoined_table( joinedTable );
+					convertJoinItemToJoinedTable( table, item, joinedTable );
 				}
-				// TODO Auto-generated method stub
 			}
 			else
 			{
+				table_reference tableReference = new table_reference( );
+				tableReferences.add( tableReference );
 				table_factor tableFactor = new table_factor( );
 				tableReference.setTable_factor( tableFactor );
 				convertTableToTableFactor( table, tableFactor );
@@ -366,6 +372,242 @@ public class AnsiGenerator implements SQL2XMLGenerator
 			tableExpression.setHaving_clause( havingClause );
 			convertHavingClauseToModel( select.getGroupByClause( )
 					.getHavingClause( ), havingClause );
+		}
+	}
+
+	private void convertJoinItemToJoinedTable( TTable table, TJoinItem item,
+			joined_table joinedTable )
+	{
+		if ( item.getJoinType( ) == EJoinType.natural
+				|| item.getJoinType( ) == EJoinType.natural_full
+				|| item.getJoinType( ) == EJoinType.natural_fullouter
+				|| item.getJoinType( ) == EJoinType.natural_inner
+				|| item.getJoinType( ) == EJoinType.natural_left
+				|| item.getJoinType( ) == EJoinType.natural_leftouter
+				|| item.getJoinType( ) == EJoinType.natural_right
+				|| item.getJoinType( ) == EJoinType.natural_rightouter )
+		{
+			natural_join naturalJoin = new natural_join( );
+			joinedTable.setNatural_join( naturalJoin );
+			convertJoinItemToNaturalJoin( table, item, naturalJoin );
+		}
+		if ( item.getJoinType( ) == EJoinType.cross )
+		{
+			cross_join crossJoin = new cross_join( );
+			joinedTable.setCross_join( crossJoin );
+
+			table_factor tableFactor = new table_factor( );
+			crossJoin.getTable_reference( ).setTable_factor( tableFactor );
+			convertTableToTableFactor( table, tableFactor );
+
+			convertTableToTableFactor( item.getTable( ),
+					crossJoin.getTable_factor( ) );
+
+		}
+		if ( item.getJoinType( ) == EJoinType.full
+				|| item.getJoinType( ) == EJoinType.fullouter
+				|| item.getJoinType( ) == EJoinType.inner
+				|| item.getJoinType( ) == EJoinType.left
+				|| item.getJoinType( ) == EJoinType.leftouter
+				|| item.getJoinType( ) == EJoinType.right
+				|| item.getJoinType( ) == EJoinType.rightouter )
+		{
+			qualified_join qualifiedJoin = new qualified_join( );
+			joinedTable.setQualified_join( qualifiedJoin );
+			convertJoinItemToQualifiedJoin( table, item, qualifiedJoin );
+
+			if ( item.getOnCondition( ) != null )
+			{
+				qualifiedJoin.getJoin_specification( )
+						.setJoin_condition( new join_condition( ) );
+				convertExpressionToJoinCondition( item.getOnCondition( ),
+						qualifiedJoin.getJoin_specification( )
+								.getJoin_condition( ) );
+			}
+			else if ( item.getUsingColumns( ) != null )
+			{
+				qualifiedJoin.getJoin_specification( )
+						.setNamed_column_condition( new named_column_condition( ) );
+				convertExpressionTotNamedColumnCondition( item.getUsingColumns( ),
+						qualifiedJoin.getJoin_specification( )
+								.getNamed_column_condition( ) );
+			}
+		}
+	}
+
+	private void convertExpressionTotNamedColumnCondition(
+			TObjectNameList columns,
+			named_column_condition named_column_condition )
+	{
+		List<column_name> columnNames = named_column_condition.getJoin_column_list( )
+				.getColumn_name_list( )
+				.getColumn_name( );
+		for ( int i = 0; i < columns.size( ); i++ )
+		{
+			column_name columnName = new column_name( );
+			columnNames.add( columnName );
+			identifier identifier = columnName.getIdentifier( );
+			convertObjectName2Model( columns.getObjectName( i ), identifier );
+		}
+	}
+
+	private void convertExpressionToJoinCondition( TExpression onCondition,
+			join_condition join_condition )
+	{
+		convertBooleanExpressionToModel( onCondition,
+				join_condition.getSearch_condition( )
+						.getBoolean_value_expression( ) );
+
+	}
+
+	private void convertJoinItemToQualifiedJoin( TTable table, TJoinItem item,
+			qualified_join qualifiedJoin )
+	{
+		convertTableToQualifiedJoin( table, qualifiedJoin, false );
+		convertTableToQualifiedJoin( item.getTable( ), qualifiedJoin, true );
+
+		join_type joinType = new join_type( );
+		qualifiedJoin.setJoin_type( joinType );
+		convertJoinTypeToModel( item.getJoinType( ), joinType );
+
+	}
+
+	private void convertTableToQualifiedJoin( TTable table,
+			qualified_join qualifiedJoin, boolean isJoinTable )
+	{
+		if ( table.getPartitionExtensionClause( ) != null )
+		{
+			partitioned_join_table partitionedJoinTable = new partitioned_join_table( );
+
+			if ( !isJoinTable )
+			{
+				qualifiedJoin.setPartitioned_join_table( partitionedJoinTable );
+			}
+			else
+			{
+				qualifiedJoin.setJoin_partitioned_join_table( partitionedJoinTable );
+			}
+			convertTableToTableFactor( table,
+					partitionedJoinTable.getTable_factor( ) );
+
+			// FIXME lost PARTITION BY <partitioned join column reference list>
+		}
+		else
+		{
+			table_reference tableReference = new table_reference( );
+
+			if ( !isJoinTable )
+			{
+				qualifiedJoin.setTable_reference( tableReference );
+			}
+			else
+			{
+				qualifiedJoin.setJoin_table_reference( tableReference );
+			}
+
+			table_factor tableFactor = new table_factor( );
+			tableReference.setTable_factor( tableFactor );
+			convertTableToTableFactor( table, tableFactor );
+		}
+
+	}
+
+	private void convertJoinItemToNaturalJoin( TTable table, TJoinItem item,
+			natural_join naturalJoin )
+	{
+		convertTableToNaturalJoin( table, naturalJoin, false );
+		convertTableToNaturalJoin( item.getTable( ), naturalJoin, true );
+
+		join_type joinType = new join_type( );
+		naturalJoin.setJoin_type( joinType );
+		convertJoinTypeToModel( item.getJoinType( ), joinType );
+
+	}
+
+	private void convertJoinTypeToModel( EJoinType joinType,
+			join_type joinTypeModel )
+	{
+		if ( joinType == EJoinType.inner )
+		{
+			joinTypeModel.setKw_inner( "inner" );
+		}
+		else
+		{
+			outer_join_type_with_outer outerJoinTypeWithOuter = new outer_join_type_with_outer( );
+			joinTypeModel.setOuter_join_type_with_outer( outerJoinTypeWithOuter );
+			if ( joinType == EJoinType.fullouter
+					|| joinType == EJoinType.leftouter
+					|| joinType == EJoinType.rightouter
+					|| joinType == EJoinType.natural_fullouter
+					|| joinType == EJoinType.natural_leftouter
+					|| joinType == EJoinType.natural_rightouter )
+			{
+				outerJoinTypeWithOuter.setKw_outer( "outer" );
+			}
+			if ( joinType == EJoinType.full
+					|| joinType == EJoinType.fullouter
+					|| joinType == EJoinType.natural_full
+					|| joinType == EJoinType.natural_fullouter
+					|| joinType == EJoinType.natural )
+			{
+				outerJoinTypeWithOuter.getOuter_join_type( )
+						.setKw_full( "full" );
+			}
+			if ( joinType == EJoinType.left
+					|| joinType == EJoinType.leftouter
+					|| joinType == EJoinType.natural_left
+					|| joinType == EJoinType.natural_leftouter )
+			{
+				outerJoinTypeWithOuter.getOuter_join_type( )
+						.setKw_full( "left" );
+			}
+			if ( joinType == EJoinType.right
+					|| joinType == EJoinType.rightouter
+					|| joinType == EJoinType.natural_right
+					|| joinType == EJoinType.natural_rightouter )
+			{
+				outerJoinTypeWithOuter.getOuter_join_type( )
+						.setKw_full( "full" );
+			}
+		}
+	}
+
+	private void convertTableToNaturalJoin( TTable table,
+			natural_join naturalJoin, boolean isJoinTable )
+	{
+		if ( table.getPartitionExtensionClause( ) != null )
+		{
+			partitioned_join_table partitionedJoinTable = new partitioned_join_table( );
+
+			if ( !isJoinTable )
+			{
+				naturalJoin.setPartitioned_join_table( partitionedJoinTable );
+			}
+			else
+			{
+				naturalJoin.setJoin_partitioned_join_table( partitionedJoinTable );
+			}
+			convertTableToTableFactor( table,
+					partitionedJoinTable.getTable_factor( ) );
+
+			// FIXME lost PARTITION BY <partitioned join column reference list>
+		}
+		else
+		{
+			table_reference tableReference = new table_reference( );
+
+			if ( !isJoinTable )
+			{
+				naturalJoin.setTable_reference( tableReference );
+			}
+			else
+			{
+				naturalJoin.setJoin_table_reference( tableReference );
+			}
+
+			table_factor tableFactor = new table_factor( );
+			tableReference.setTable_factor( tableFactor );
+			convertTableToTableFactor( table, tableFactor );
 		}
 	}
 
@@ -525,14 +767,23 @@ public class AnsiGenerator implements SQL2XMLGenerator
 		switch ( condition.getExpressionType( ) )
 		{
 			case simple_comparison_t :
+			{
 				predicate predicate = new predicate( );
 				boolean_primary.setPredicate( predicate );
 				comparison_predicate comparisonPredicate = new comparison_predicate( );
 				predicate.setComparison_predicate( comparisonPredicate );
 				convertComparisonExpressionToComparisonPredicate( condition,
 						comparisonPredicate );
+			}
 				break;
 			case in_t :
+			{
+				predicate predicate = new predicate( );
+				boolean_primary.setPredicate( predicate );
+				in_predicate inPredicate = new in_predicate( );
+				predicate.setIn_predicate( inPredicate );
+				convertInExpressionToInPredicate( condition, inPredicate );
+			}
 				break;
 			case between_t :
 				break;
@@ -540,6 +791,82 @@ public class AnsiGenerator implements SQL2XMLGenerator
 				break;
 			case exists_t :
 				break;
+		}
+
+	}
+
+	private void convertInExpressionToInPredicate( TExpression condition,
+			in_predicate inPredicate )
+	{
+		convertExpressionToRowValuePredicand( condition.getLeftOperand( ),
+				inPredicate.getRow_value_predicand( ) );
+		convertExpressionToRowValuePredicand( condition,
+				inPredicate.getIn_predicate_part_2( ) );
+	}
+
+	private void convertExpressionToRowValuePredicand( TExpression condition,
+			in_predicate_part_2 in_predicate_part_2 )
+	{
+		if ( condition.getNotToken( ) != null )
+		{
+			in_predicate_part_2.setKw_not( "not" );
+		}
+		convertExpressionToInPredicateValue( condition.getRightOperand( ),
+				in_predicate_part_2.getIn_predicate_value( ) );
+	}
+
+	private void convertExpressionToInPredicateValue( TExpression expression,
+			in_predicate_value in_predicate_value )
+	{
+
+		if ( expression.getExpressionType( ) == EExpressionType.list_t )
+		{
+			in_value_list inValueList = new in_value_list( );
+			in_predicate_value.setIn_value_list( inValueList );
+			List<row_value_expression> rowValueExpressions = inValueList.getRow_value_expression( );
+			for ( int i = 0; i < expression.getExprList( ).size( ); i++ )
+			{
+				TExpression value = expression.getExprList( ).getExpression( i );
+				row_value_expression rowValueExpression = new row_value_expression( );
+				rowValueExpressions.add( rowValueExpression );
+				convertExpressionToRowValueExpression( value,
+						rowValueExpression );
+			}
+		}
+		else if ( expression.getExpressionType( ) == EExpressionType.subquery_t )
+		{
+			table_subquery tableSubquery = new table_subquery( );
+			in_predicate_value.setTable_subquery( tableSubquery );
+			convertSelectToQueryExpression( expression.getSubQuery( ),
+					tableSubquery.getSubquery( ).getQuery_expression( ) );
+		}
+	}
+
+	private void convertExpressionToRowValueExpression( TExpression expression,
+			row_value_expression rowValueExpression )
+	{
+		if ( expression.getExpressionType( ) == EExpressionType.simple_constant_t
+				|| expression.getExpressionType( ) == EExpressionType.simple_object_name_t )
+		{
+			row_value_special_case rowValueSpecialCase = new row_value_special_case( );
+			rowValueExpression.setRow_value_special_case( rowValueSpecialCase );
+			convertExpressionToNonParenthesizedValueExpression( expression,
+					rowValueSpecialCase.getNonparenthesized_value_expression_primary( ) );
+		}
+		else if ( expression.getExpressionType( ) == EExpressionType.function_t
+				&& ( Utility.isAggregateFunction( expression.getFunctionCall( )
+						.getFunctionName( )
+						.toString( ) ) ) )
+		{
+			row_value_special_case rowValueSpecialCase = new row_value_special_case( );
+			rowValueExpression.setRow_value_special_case( rowValueSpecialCase );
+			convertExpressionToNonParenthesizedValueExpression( expression,
+					rowValueSpecialCase.getNonparenthesized_value_expression_primary( ) );
+		}
+		else
+		{
+			explicit_row_value_constructor explicitRowValueConstructor = new explicit_row_value_constructor( );
+			rowValueExpression.setExplicit_row_value_constructor( explicitRowValueConstructor );
 		}
 
 	}
