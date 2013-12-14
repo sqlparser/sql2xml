@@ -1,0 +1,1 @@
+select percent_rank() over( partition by empno order by empno) from emp;

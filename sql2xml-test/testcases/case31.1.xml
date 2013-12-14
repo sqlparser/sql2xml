@@ -16,29 +16,23 @@
                                        <derived_column>
                                           <value_expression>
                                              <common_value_expression>
-                                                <string_value_expression>
-                                                   <character_value_expression>
-                                                      <character_factor>
-                                                         <character_primary>
-                                                            <value_expression_primary>
-                                                               <nonparenthesized_value_expression_primary>
-                                                                  <column_reference>
-                                                                     <basic_identifier_chain>
-                                                                        <identifier_chain>
-                                                                           <identifier>
-                                                                              <actual_identifier>
-                                                                                 <regular_identifier>department_id</regular_identifier>
-                                                                              </actual_identifier>
-                                                                           </identifier>
-                                                                        </identifier_chain>
-                                                                     </basic_identifier_chain>
-                                                                  </column_reference>
-                                                               </nonparenthesized_value_expression_primary>
-                                                            </value_expression_primary>
-                                                         </character_primary>
-                                                      </character_factor>
-                                                   </character_value_expression>
-                                                </string_value_expression>
+                                                <reference_value_expression>
+                                                   <value_expression_primary>
+                                                      <nonparenthesized_value_expression_primary>
+                                                         <column_reference>
+                                                            <basic_identifier_chain>
+                                                               <identifier_chain>
+                                                                  <identifier>
+                                                                     <actual_identifier>
+                                                                        <regular_identifier>department_id</regular_identifier>
+                                                                     </actual_identifier>
+                                                                  </identifier>
+                                                               </identifier_chain>
+                                                            </basic_identifier_chain>
+                                                         </column_reference>
+                                                      </nonparenthesized_value_expression_primary>
+                                                   </value_expression_primary>
+                                                </reference_value_expression>
                                              </common_value_expression>
                                           </value_expression>
                                        </derived_column>
@@ -47,29 +41,23 @@
                                        <derived_column>
                                           <value_expression>
                                              <common_value_expression>
-                                                <string_value_expression>
-                                                   <character_value_expression>
-                                                      <character_factor>
-                                                         <character_primary>
-                                                            <value_expression_primary>
-                                                               <nonparenthesized_value_expression_primary>
-                                                                  <column_reference>
-                                                                     <basic_identifier_chain>
-                                                                        <identifier_chain>
-                                                                           <identifier>
-                                                                              <actual_identifier>
-                                                                                 <regular_identifier>department_name</regular_identifier>
-                                                                              </actual_identifier>
-                                                                           </identifier>
-                                                                        </identifier_chain>
-                                                                     </basic_identifier_chain>
-                                                                  </column_reference>
-                                                               </nonparenthesized_value_expression_primary>
-                                                            </value_expression_primary>
-                                                         </character_primary>
-                                                      </character_factor>
-                                                   </character_value_expression>
-                                                </string_value_expression>
+                                                <reference_value_expression>
+                                                   <value_expression_primary>
+                                                      <nonparenthesized_value_expression_primary>
+                                                         <column_reference>
+                                                            <basic_identifier_chain>
+                                                               <identifier_chain>
+                                                                  <identifier>
+                                                                     <actual_identifier>
+                                                                        <regular_identifier>department_name</regular_identifier>
+                                                                     </actual_identifier>
+                                                                  </identifier>
+                                                               </identifier_chain>
+                                                            </basic_identifier_chain>
+                                                         </column_reference>
+                                                      </nonparenthesized_value_expression_primary>
+                                                   </value_expression_primary>
+                                                </reference_value_expression>
                                              </common_value_expression>
                                           </value_expression>
                                        </derived_column>
@@ -78,29 +66,23 @@
                                        <derived_column>
                                           <value_expression>
                                              <common_value_expression>
-                                                <string_value_expression>
-                                                   <character_value_expression>
-                                                      <character_factor>
-                                                         <character_primary>
-                                                            <value_expression_primary>
-                                                               <nonparenthesized_value_expression_primary>
-                                                                  <column_reference>
-                                                                     <basic_identifier_chain>
-                                                                        <identifier_chain>
-                                                                           <identifier>
-                                                                              <actual_identifier>
-                                                                                 <regular_identifier>location_id</regular_identifier>
-                                                                              </actual_identifier>
-                                                                           </identifier>
-                                                                        </identifier_chain>
-                                                                     </basic_identifier_chain>
-                                                                  </column_reference>
-                                                               </nonparenthesized_value_expression_primary>
-                                                            </value_expression_primary>
-                                                         </character_primary>
-                                                      </character_factor>
-                                                   </character_value_expression>
-                                                </string_value_expression>
+                                                <reference_value_expression>
+                                                   <value_expression_primary>
+                                                      <nonparenthesized_value_expression_primary>
+                                                         <column_reference>
+                                                            <basic_identifier_chain>
+                                                               <identifier_chain>
+                                                                  <identifier>
+                                                                     <actual_identifier>
+                                                                        <regular_identifier>location_id</regular_identifier>
+                                                                     </actual_identifier>
+                                                                  </identifier>
+                                                               </identifier_chain>
+                                                            </basic_identifier_chain>
+                                                         </column_reference>
+                                                      </nonparenthesized_value_expression_primary>
+                                                   </value_expression_primary>
+                                                </reference_value_expression>
                                              </common_value_expression>
                                           </value_expression>
                                        </derived_column>
@@ -109,29 +91,23 @@
                                        <derived_column>
                                           <value_expression>
                                              <common_value_expression>
-                                                <string_value_expression>
-                                                   <character_value_expression>
-                                                      <character_factor>
-                                                         <character_primary>
-                                                            <value_expression_primary>
-                                                               <nonparenthesized_value_expression_primary>
-                                                                  <column_reference>
-                                                                     <basic_identifier_chain>
-                                                                        <identifier_chain>
-                                                                           <identifier>
-                                                                              <actual_identifier>
-                                                                                 <regular_identifier>city</regular_identifier>
-                                                                              </actual_identifier>
-                                                                           </identifier>
-                                                                        </identifier_chain>
-                                                                     </basic_identifier_chain>
-                                                                  </column_reference>
-                                                               </nonparenthesized_value_expression_primary>
-                                                            </value_expression_primary>
-                                                         </character_primary>
-                                                      </character_factor>
-                                                   </character_value_expression>
-                                                </string_value_expression>
+                                                <reference_value_expression>
+                                                   <value_expression_primary>
+                                                      <nonparenthesized_value_expression_primary>
+                                                         <column_reference>
+                                                            <basic_identifier_chain>
+                                                               <identifier_chain>
+                                                                  <identifier>
+                                                                     <actual_identifier>
+                                                                        <regular_identifier>city</regular_identifier>
+                                                                     </actual_identifier>
+                                                                  </identifier>
+                                                               </identifier_chain>
+                                                            </basic_identifier_chain>
+                                                         </column_reference>
+                                                      </nonparenthesized_value_expression_primary>
+                                                   </value_expression_primary>
+                                                </reference_value_expression>
                                              </common_value_expression>
                                           </value_expression>
                                        </derived_column>

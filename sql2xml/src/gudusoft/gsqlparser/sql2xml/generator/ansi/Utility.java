@@ -181,7 +181,8 @@ public class Utility
 	{
 		if ( string == null )
 			return false;
-		if ( string.trim( ).matches( "(?i)((Date)|(d)|(TIME)|(TIMESTAMP))\\s*'.+?'" ) )
+		if ( string.trim( )
+				.matches( "(?i)((Date)|(d)|(TIME)|(TIMESTAMP))\\s*'.+?'" ) )
 			return true;
 		return false;
 	}
@@ -202,6 +203,28 @@ public class Utility
 		{
 			if ( dateTypeValueFunctions.get( i )
 					.equalsIgnoreCase( functionName ) )
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
+	static List<String> windowFunctions = new ArrayList<String>( );
+	static
+	{
+		windowFunctions.add( "RANK" );
+		windowFunctions.add( "DENSE_RANK" );
+		windowFunctions.add( "PERCENT_RANK" );
+		windowFunctions.add( "CUME_DIST" );
+		windowFunctions.add( "ROW_NUMBER" );
+	}
+
+	public static boolean isWindowFunction( String functionName )
+	{
+		for ( int i = 0; i < windowFunctions.size( ); i++ )
+		{
+			if ( windowFunctions.get( i ).equalsIgnoreCase( functionName ) )
 			{
 				return true;
 			}

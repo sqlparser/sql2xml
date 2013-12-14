@@ -1,0 +1,1 @@
+select cume_dist() over( partition by empno order by empno) from emp;

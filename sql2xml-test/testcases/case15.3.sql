@@ -1,0 +1,1 @@
+select rank() over( partition by empno order by empno) from emp;

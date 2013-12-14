@@ -1,0 +1,1 @@
+select row_number() over( partition by empno order by empno) from emp;

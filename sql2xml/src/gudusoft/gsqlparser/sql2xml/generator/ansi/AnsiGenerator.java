@@ -11,8 +11,10 @@ import gudusoft.gsqlparser.TGSqlParser;
 import gudusoft.gsqlparser.TSourceToken;
 import gudusoft.gsqlparser.TStatementList;
 import gudusoft.gsqlparser.nodes.TAliasClause;
+import gudusoft.gsqlparser.nodes.TAnalyticFunction;
 import gudusoft.gsqlparser.nodes.TCTEList;
 import gudusoft.gsqlparser.nodes.TExpression;
+import gudusoft.gsqlparser.nodes.TExpressionList;
 import gudusoft.gsqlparser.nodes.TForUpdate;
 import gudusoft.gsqlparser.nodes.TFunctionCall;
 import gudusoft.gsqlparser.nodes.TGroupBy;
@@ -1308,6 +1310,13 @@ public class AnsiGenerator implements SQL2XMLGenerator
 		sort_specification_list sortSpecificationList = new sort_specification_list( );
 		orderByClause.setSort_specification_list( sortSpecificationList );
 
+		convertOrderbyClauseToSortSpecificationList( orderby,
+				sortSpecificationList );
+	}
+
+	private void convertOrderbyClauseToSortSpecificationList( TOrderBy orderby,
+			sort_specification_list sortSpecificationList )
+	{
 		List<sort_specification> sort_specifications = new ArrayList<sort_specification>( );
 		sortSpecificationList.setSort_specification( sort_specifications );
 
@@ -1359,7 +1368,14 @@ public class AnsiGenerator implements SQL2XMLGenerator
 			TExpression expression,
 			common_value_expression commonValueExpression )
 	{
-		if ( isDateTypeValueExpression( expression ) )
+		if ( isWindowFunctionExpression( expression ) )
+		{
+			reference_value_expression referenceValueExpression = new reference_value_expression( );
+			commonValueExpression.setReference_value_expression( referenceValueExpression );
+			convertExpressionToValueExpressionPrimary( expression,
+					referenceValueExpression.getValue_expression_primary( ) );
+		}
+		else if ( isDateTypeValueExpression( expression ) )
 		{
 			datetime_value_expression datetimeValueExpression = new datetime_value_expression( );
 			commonValueExpression.setDatetime_value_expression( datetimeValueExpression );
@@ -1382,10 +1398,10 @@ public class AnsiGenerator implements SQL2XMLGenerator
 		}
 		else if ( expression.getExpressionType( ) == EExpressionType.simple_object_name_t )
 		{
-			string_value_expression stringValueExpression = new string_value_expression( );
-			commonValueExpression.setString_value_expression( stringValueExpression );
-			convertExpressionToStringValueExpression( expression,
-					stringValueExpression );
+			reference_value_expression referenceValueExpression = new reference_value_expression( );
+			commonValueExpression.setReference_value_expression( referenceValueExpression );
+			convertExpressionToValueExpressionPrimary( expression,
+					referenceValueExpression.getValue_expression_primary( ) );
 		}
 
 	}
@@ -1830,10 +1846,122 @@ public class AnsiGenerator implements SQL2XMLGenerator
 					convertExpressionToSetFunction( expression.getFunctionCall( ),
 							setFunctionSpecification );
 				}
+				else if ( isWindowFunctionExpression( expression ) )
+				{
+					window_function windowFunction = new window_function( );
+					nonparenthesizedValueExpressionPrimary.setWindow_function( windowFunction );
+					convertExpressionToWindowFunction( expression,
+							windowFunction );
+				}
 				break;
 			default :
 		}
 
+	}
+
+	private boolean isWindowFunctionExpression( TExpression expression )
+	{
+		if ( expression.getExpressionType( ) == EExpressionType.function_t )
+		{
+			String functionName = expression.getFunctionCall( )
+					.getFunctionName( )
+					.toString( );
+			if ( Utility.isWindowFunction( functionName ) )
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private void convertExpressionToWindowFunction( TExpression expression,
+			window_function windowFunction )
+	{
+		String functionName = expression.getFunctionCall( )
+				.getFunctionName( )
+				.toString( );
+
+		if ( functionName.equalsIgnoreCase( "row_number" ) )
+		{
+			windowFunction.getWindow_function_type( )
+					.setKw_row_number( "row_number" );
+		}
+		else if ( functionName.equalsIgnoreCase( "rank" ) )
+		{
+			windowFunction.getWindow_function_type( )
+					.setRank_function_type( "rank" );
+		}
+		else if ( functionName.equalsIgnoreCase( "percent_rank" ) )
+		{
+			windowFunction.getWindow_function_type( )
+					.setRank_function_type( "percent_rank" );
+		}
+		else if ( functionName.equalsIgnoreCase( "cume_dist" ) )
+		{
+			windowFunction.getWindow_function_type( )
+					.setRank_function_type( "cume_dist" );
+		}
+		else if ( functionName.equalsIgnoreCase( "dense_rank" ) )
+		{
+			windowFunction.getWindow_function_type( )
+					.setRank_function_type( "dense_rank" );
+		}
+
+		TAnalyticFunction analyticFunction = expression.getFunctionCall( )
+				.getAnalyticFunction( );
+		in_line_window_specification inLineWindowSpecification = new in_line_window_specification( );
+		windowFunction.getWindow_name_or_specification( )
+				.setIn_line_window_specification( inLineWindowSpecification );
+		convertAnalyticFunctionToInLineWindowSpecification( analyticFunction,
+				inLineWindowSpecification.getWindow_specification( )
+						.getWindow_specification_details( ) );
+	}
+
+	private void convertAnalyticFunctionToInLineWindowSpecification(
+			TAnalyticFunction analyticFunction,
+			window_specification_details windowSpecificationDetails )
+	{
+		if ( analyticFunction.getPartitionBy_ExprList( ) != null )
+		{
+			window_partition_clause windowPartitionClause = new window_partition_clause( );
+			windowSpecificationDetails.setWindow_partition_clause( windowPartitionClause );
+			convertPartitionByToModel( analyticFunction.getPartitionBy_ExprList( ),
+					windowPartitionClause.getWindow_partition_column_reference_list( )
+							.getWindow_partition_column_reference( ) );
+		}
+		if ( analyticFunction.getOrderBy( ) != null )
+		{
+			window_order_clause windowOrderClause = new window_order_clause( );
+			windowSpecificationDetails.setWindow_order_clause( windowOrderClause );
+			convertOrderbyClauseToSortSpecificationList( analyticFunction.getOrderBy( ),
+					windowOrderClause.getSort_specification_list( ) );
+
+		}
+		if ( analyticFunction.getKeepDenseRankClause( ) != null )
+		{
+
+		}
+	}
+
+	private void convertPartitionByToModel(
+			TExpressionList partitionBy_ExprList,
+			List<window_partition_column_reference> window_partition_column_references )
+	{
+		for ( int i = 0; i < partitionBy_ExprList.size( ); i++ )
+		{
+			window_partition_column_reference window_partition_column_reference = new window_partition_column_reference( );
+			window_partition_column_references.add( window_partition_column_reference );
+			convertExpressionToPartitionColumnReference( partitionBy_ExprList.getExpression( i ),
+					window_partition_column_reference );
+		}
+	}
+
+	private void convertExpressionToPartitionColumnReference(
+			TExpression expression,
+			window_partition_column_reference partitionColumnReference )
+	{
+		convertExpressionToColumnReference( expression,
+				partitionColumnReference.getColumn_reference( ) );
 	}
 
 	private void convertExpressionToSetFunction( TFunctionCall function,

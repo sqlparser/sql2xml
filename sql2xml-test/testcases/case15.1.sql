@@ -1,0 +1,1 @@
+select row_number() over( order by empno) from emp;
