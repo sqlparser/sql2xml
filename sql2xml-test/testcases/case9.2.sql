@@ -1,0 +1,1 @@
+select interval '10 13:14:40' day to second from dual

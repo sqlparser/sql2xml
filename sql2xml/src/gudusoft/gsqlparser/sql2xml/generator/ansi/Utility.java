@@ -187,6 +187,16 @@ public class Utility
 		return false;
 	}
 
+	public static boolean isIntervalTypeValue( String string )
+	{
+		if ( string == null )
+			return false;
+		if ( string.trim( )
+				.matches( "(?i)(INTERVAL)\\s*.+?" ) )
+			return true;
+		return false;
+	}
+
 	static List<String> dateTypeValueFunctions = new ArrayList<String>( );
 	static
 	{

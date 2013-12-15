@@ -1382,6 +1382,13 @@ public class AnsiGenerator implements SQL2XMLGenerator
 			convertExpressionToDatetimeValueExpression( expression,
 					datetimeValueExpression );
 		}
+		else if ( isIntervalValueExpression( expression ) )
+		{
+			interval_value_expression intervalValueExpression = new interval_value_expression( );
+			commonValueExpression.setInterval_value_expression( intervalValueExpression );
+			convertExpressionToIntervalValueExpression( expression,
+					intervalValueExpression );
+		}
 		else if ( isNumericValueExpression( expression ) )
 		{
 			numeric_value_expression numericValueExpression = new numeric_value_expression( );
@@ -1440,6 +1447,46 @@ public class AnsiGenerator implements SQL2XMLGenerator
 			datetimeValueExpression.setDatetime_term( datetimeTerm );
 			convertExpressionToDateTimeFactor( expression,
 					datetimeTerm.getDatetime_factor( ) );
+		}
+	}
+
+	private void convertExpressionToIntervalValueExpression(
+			TExpression expression,
+			interval_value_expression intervalValueExpression )
+	{
+		if ( expression.getExpressionType( ) == EExpressionType.arithmetic_plus_t )
+		{
+			if ( isIntervalValueExpression( expression.getLeftOperand( ) ) )
+			{
+				interval_value_expression_plus_interval_term intervalValuePlusExpression = new interval_value_expression_plus_interval_term( );
+				intervalValueExpression.setInterval_value_expression_plus_interval_term( intervalValuePlusExpression );
+				convertExpressionToIntervalValueExpression( expression.getLeftOperand( ),
+						intervalValuePlusExpression.getInterval_value_expression_1( )
+								.getInterval_value_expression( ) );
+				convertExpressionToIntervalTerm( expression.getRightOperand( ),
+						intervalValuePlusExpression.getInterval_term_1( )
+								.getInterval_term( ) );
+			}
+		}
+		else if ( expression.getExpressionType( ) == EExpressionType.arithmetic_minus_t )
+		{
+			if ( isDateTypeValueExpression( expression.getLeftOperand( ) ) )
+			{
+				interval_value_expression_minus_interval_term intervalValuePlusExpression = new interval_value_expression_minus_interval_term( );
+				intervalValueExpression.setInterval_value_expression_minus_interval_term( intervalValuePlusExpression );
+				convertExpressionToIntervalValueExpression( expression.getLeftOperand( ),
+						intervalValuePlusExpression.getInterval_value_expression_1( )
+								.getInterval_value_expression( ) );
+				convertExpressionToIntervalTerm( expression.getRightOperand( ),
+						intervalValuePlusExpression.getInterval_term_1( )
+								.getInterval_term( ) );
+			}
+		}
+		else
+		{
+			interval_term intervalTerm = new interval_term( );
+			intervalValueExpression.setInterval_term( intervalTerm );
+			convertExpressionToIntervalTerm( expression, intervalTerm );
 		}
 	}
 
@@ -1579,6 +1626,26 @@ public class AnsiGenerator implements SQL2XMLGenerator
 		{
 			String functionName = expression.toString( );
 			if ( Utility.isDateTypeValueFunction( functionName ) )
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private boolean isIntervalValueExpression( TExpression expression )
+	{
+		if ( expression.getExpressionType( ) == EExpressionType.arithmetic_plus_t
+				|| expression.getExpressionType( ) == EExpressionType.arithmetic_minus_t )
+		{
+			if ( expression.getLeftOperand( ) != null )
+				return isIntervalValueExpression( expression.getLeftOperand( ) );
+			else
+				return false;
+		}
+		else if ( expression.getExpressionType( ) == EExpressionType.simple_constant_t )
+		{
+			if ( Utility.isIntervalTypeValue( expression.toString( ) ) )
 			{
 				return true;
 			}
@@ -2146,7 +2213,13 @@ public class AnsiGenerator implements SQL2XMLGenerator
 	private void convertExpressionToGeneralLiteral( TExpression expression,
 			general_literal generalLiteral )
 	{
-		if ( Utility.isDateTypeValue( expression.toString( ) ) )
+		if ( Utility.isIntervalTypeValue( expression.toString( ) ) )
+		{
+			interval_literal intervalLiteral = new interval_literal( );
+			generalLiteral.setInterval_literal( intervalLiteral );
+			convertExpressionToIntervalLiteral( expression, intervalLiteral );
+		}
+		else if ( Utility.isDateTypeValue( expression.toString( ) ) )
 		{
 			datetime_literal datetimeLiteral = new datetime_literal( );
 			generalLiteral.setDatetime_literal( datetimeLiteral );
@@ -2177,6 +2250,301 @@ public class AnsiGenerator implements SQL2XMLGenerator
 			}
 		}
 
+	}
+
+	private void convertExpressionToIntervalLiteral( TExpression expression,
+			interval_literal intervalLiteral )
+	{
+		String expressionContent = expression.toString( ).trim( ).toUpperCase( );
+		if ( expressionContent.startsWith( "INTERVAL" ) )
+		{
+			String intervalString = expressionContent.substring( expressionContent.indexOf( "'" ) + 1,
+					expressionContent.lastIndexOf( "'" ) )
+					.trim( );
+
+			String qualifier = expressionContent.substring( expressionContent.lastIndexOf( "'" ) + 1 )
+					.trim( );
+			if ( qualifier.toUpperCase( ).indexOf( "TO" ) == -1 )
+			{
+				single_datetime_field single_datetime_field = new single_datetime_field( );
+				intervalLiteral.getInterval_qualifier( )
+						.setSingle_datetime_field( single_datetime_field );
+				if ( qualifier.toUpperCase( ).indexOf( "SECOND" ) != -1 )
+				{
+					single_datetime_field_2 single_datetime_field_2 = new single_datetime_field_2( );
+					single_datetime_field.setSingle_datetime_field_2( single_datetime_field_2 );
+
+					if ( qualifier.indexOf( "(" ) != -1
+							&& qualifier.indexOf( ")" ) != -1 )
+					{
+						interval_leading_field_precision_comma interval_leading_field_precision_comma = new interval_leading_field_precision_comma( );
+						single_datetime_field_2.setInterval_leading_field_precision_comma( interval_leading_field_precision_comma );
+						String precision = qualifier.substring( qualifier.indexOf( "(" ) + 1,
+								qualifier.lastIndexOf( ")" ) );
+						String[] splits = precision.split( "\\," );
+						if ( splits.length > 0 )
+						{
+							interval_leading_field_precision_comma.getInterval_leading_field_precision( )
+									.setUnsigned_integer( splits[0] );
+							if ( splits.length > 1 )
+							{
+								interval_fractional_seconds_precision interval_fractional_seconds_precision = new interval_fractional_seconds_precision( );
+								interval_leading_field_precision_comma.setInterval_fractional_seconds_precision( interval_fractional_seconds_precision );
+								interval_fractional_seconds_precision.setUnsigned_integer( splits[1] );
+							}
+						}
+					}
+				}
+				else
+				{
+					single_datetime_field_1 single_datetime_field_1 = new single_datetime_field_1( );
+					single_datetime_field.setSingle_datetime_field_1( single_datetime_field_1 );
+
+					if ( qualifier.indexOf( "(" ) != -1
+							&& qualifier.indexOf( ")" ) != -1 )
+					{
+						interval_leading_field_precision interval_leading_field_precision = new interval_leading_field_precision( );
+						single_datetime_field_1.setInterval_leading_field_precision( interval_leading_field_precision );
+						String precision = qualifier.substring( qualifier.indexOf( "(" ) + 1,
+								qualifier.lastIndexOf( ")" ) );
+						interval_leading_field_precision.setUnsigned_integer( precision );
+
+						String datetimeField = qualifier.substring( 0,
+								qualifier.indexOf( "(" ) )
+								.toUpperCase( )
+								.trim( );
+						convertDateTimeFieldToSingleDatetimeField1( datetimeField,
+								single_datetime_field_1 );
+					}
+					else
+					{
+						String datetimeField = qualifier.toUpperCase( ).trim( );
+						convertDateTimeFieldToSingleDatetimeField1( datetimeField,
+								single_datetime_field_1 );
+					}
+				}
+			}
+			else
+			{
+				start_to_end_field start_to_end_field = new start_to_end_field( );
+				intervalLiteral.getInterval_qualifier( )
+						.setStart_to_end_field( start_to_end_field );
+
+				String[] fields = qualifier.trim( ).toUpperCase( ).split( "TO" );
+				convertDateTimeFieldToSingleDatetimeField1( fields[0].trim( ),
+						start_to_end_field.getStart_field( ) );
+
+				if ( fields[1].trim( ).indexOf( "SECOND" ) == -1 )
+				{
+					non_second_primary_datetime_field non_second_primary_datetime_field = new non_second_primary_datetime_field( );
+					start_to_end_field.getEnd_field( )
+							.setNon_second_primary_datetime_field( non_second_primary_datetime_field );
+					convertDateTimeFieldToNonSecondPrimaryDatetimeField( fields[1].trim( ),
+							start_to_end_field.getEnd_field( )
+									.getNon_second_primary_datetime_field( ) );
+				}
+				else
+				{
+					second_interval_fractional_seconds_precision second_interval_fractional_seconds_precision = new second_interval_fractional_seconds_precision( );
+					start_to_end_field.getEnd_field( )
+							.setSecond_interval_fractional_seconds_precision( second_interval_fractional_seconds_precision );
+					if ( qualifier.indexOf( "(" ) != -1
+							&& qualifier.indexOf( ")" ) != -1 )
+					{
+						interval_fractional_seconds_precision interval_fractional_seconds_precision = new interval_fractional_seconds_precision( );
+						second_interval_fractional_seconds_precision.setInterval_fractional_seconds_precision( interval_fractional_seconds_precision );
+						String precision = qualifier.substring( qualifier.indexOf( "(" ) + 1,
+								qualifier.lastIndexOf( ")" ) );
+						interval_fractional_seconds_precision.setUnsigned_integer( precision );
+					}
+				}
+			}
+
+			year_month_or_day_time_literal yearMonthOrDayTimeLiteral = intervalLiteral.getInterval_string( )
+					.getUnquoted_interval_string( )
+					.getYear_month_or_day_time_literal( );
+
+			if ( qualifier.toUpperCase( ).indexOf( "YEAR" ) != -1
+					|| qualifier.toUpperCase( ).indexOf( "MONTH" ) != -1 )
+			{
+				year_month_literal yearMonthLiteral = new year_month_literal( );
+				yearMonthOrDayTimeLiteral.setYear_month_literal( yearMonthLiteral );
+
+				if ( intervalString.indexOf( '-' ) != -1 )
+				{
+					years_value_or_minus_months_value years_value_or_minus_months_value = new years_value_or_minus_months_value( );
+					yearMonthLiteral.setYears_value_or_minus_months_value( years_value_or_minus_months_value );
+					String[] splits = intervalString.split( "\\-" );
+					years_value_or_minus_months_value.getYears_value( )
+							.getDatetime_value( )
+							.setUnsigned_integer( splits[0] );
+
+					minus_months_value minus_months_value = new minus_months_value( );
+					years_value_or_minus_months_value.setMinus_months_value( minus_months_value );
+					minus_months_value.getMonths_value( )
+							.getDatetime_value( )
+							.setUnsigned_integer( splits[1] );
+				}
+				else
+				{
+					if ( qualifier.toUpperCase( ).indexOf( "YEAR" ) != -1 )
+					{
+						years_value_or_minus_months_value years_value_or_minus_months_value = new years_value_or_minus_months_value( );
+						yearMonthLiteral.setYears_value_or_minus_months_value( years_value_or_minus_months_value );
+						years_value_or_minus_months_value.getYears_value( )
+								.getDatetime_value( )
+								.setUnsigned_integer( intervalString );
+					}
+					else if ( qualifier.toUpperCase( ).indexOf( "MONTH" ) != -1 )
+					{
+						months_value months_value = new months_value( );
+						yearMonthLiteral.setMonths_value( months_value );
+						months_value.getDatetime_value( )
+								.setUnsigned_integer( intervalString );
+					}
+
+				}
+			}
+			else
+			{
+				day_time_literal dayTimeLiteral = new day_time_literal( );
+				yearMonthOrDayTimeLiteral.setDay_time_literal( dayTimeLiteral );
+
+				if ( qualifier.toUpperCase( ).indexOf( "DAY" ) != -1 )
+				{
+					day_time_interval day_time_interval = new day_time_interval( );
+					dayTimeLiteral.setDay_time_interval( day_time_interval );
+					String[] splits = intervalString.split( "\\s+" );
+					day_time_interval.getDays_value( )
+							.getDatetime_value( )
+							.setUnsigned_integer( splits[0] );
+					if ( splits.length > 1 )
+					{
+						hours_minutes_seconds_value hours_minutes_seconds_value = new hours_minutes_seconds_value( );
+						day_time_interval.setHours_minutes_seconds_value( hours_minutes_seconds_value );
+						String[] times = splits[1].split( "\\:" );
+						if ( times.length > 0 )
+						{
+							hours_minutes_seconds_value.getHours_value( )
+									.getDatetime_value( )
+									.setUnsigned_integer( times[0] );
+
+							if ( times.length > 1 )
+							{
+								minutes_seconds_value minutes_seconds_value = new minutes_seconds_value( );
+								hours_minutes_seconds_value.setMinutes_seconds_value( minutes_seconds_value );
+								minutes_seconds_value.getMinutes_value( )
+										.getDatetime_value( )
+										.setUnsigned_integer( times[1] );
+								if ( times.length > 2 )
+								{
+									seconds_value seconds_value = new seconds_value( );
+									minutes_seconds_value.setSeconds_value( seconds_value );
+									seconds_value.getDatetime_value( )
+											.setUnsigned_integer( times[2] );
+								}
+							}
+						}
+					}
+				}
+				else
+				{
+					time_interval time_interval = new time_interval( );
+					dayTimeLiteral.setTime_interval( time_interval );
+
+					if ( qualifier.toUpperCase( ).indexOf( "HOUR" ) != -1 )
+					{
+						hours_minutes_seconds_value hours_minutes_seconds_value = new hours_minutes_seconds_value( );
+						time_interval.setHours_minutes_seconds_value( hours_minutes_seconds_value );
+						String[] times = intervalString.split( "\\:" );
+						if ( times.length > 0 )
+						{
+							hours_minutes_seconds_value.getHours_value( )
+									.getDatetime_value( )
+									.setUnsigned_integer( times[0] );
+
+							if ( times.length > 1 )
+							{
+								minutes_seconds_value minutes_seconds_value = new minutes_seconds_value( );
+								hours_minutes_seconds_value.setMinutes_seconds_value( minutes_seconds_value );
+								minutes_seconds_value.getMinutes_value( )
+										.getDatetime_value( )
+										.setUnsigned_integer( times[1] );
+								if ( times.length > 2 )
+								{
+									seconds_value seconds_value = new seconds_value( );
+									minutes_seconds_value.setSeconds_value( seconds_value );
+									seconds_value.getDatetime_value( )
+											.setUnsigned_integer( times[2] );
+								}
+							}
+						}
+					}
+					else if ( qualifier.toUpperCase( ).indexOf( "MINUTE" ) != -1 )
+					{
+						minutes_seconds_value minutes_seconds_value = new minutes_seconds_value( );
+						time_interval.setMinutes_seconds_value( minutes_seconds_value );
+						String[] times = intervalString.split( "\\:" );
+						if ( times.length > 0 )
+						{
+							minutes_seconds_value.getMinutes_value( )
+									.getDatetime_value( )
+									.setUnsigned_integer( times[0] );
+							if ( times.length > 1 )
+							{
+								seconds_value seconds_value = new seconds_value( );
+								minutes_seconds_value.setSeconds_value( seconds_value );
+								seconds_value.getDatetime_value( )
+										.setUnsigned_integer( times[2] );
+							}
+						}
+					}
+					else if ( qualifier.toUpperCase( ).indexOf( "SECOND" ) != -1 )
+					{
+						seconds_value seconds_value = new seconds_value( );
+						time_interval.setSeconds_value( seconds_value );
+						seconds_value.getDatetime_value( )
+								.setUnsigned_integer( intervalString );
+
+					}
+				}
+			}
+		}
+	}
+
+	private void convertDateTimeFieldToSingleDatetimeField1(
+			String datetimeField,
+			single_datetime_field_1 single_datetime_field_1 )
+	{
+		non_second_primary_datetime_field non_second_primary_datetime_field = single_datetime_field_1.getNon_second_primary_datetime_field( );
+		convertDateTimeFieldToNonSecondPrimaryDatetimeField( datetimeField,
+				non_second_primary_datetime_field );
+	}
+
+	private void convertDateTimeFieldToNonSecondPrimaryDatetimeField(
+			String datetimeField,
+			non_second_primary_datetime_field non_second_primary_datetime_field )
+	{
+		if ( datetimeField.equals( "YEAR" ) )
+		{
+			non_second_primary_datetime_field.setKw_year( "year" );
+		}
+		else if ( datetimeField.equals( "MONTH" ) )
+		{
+			non_second_primary_datetime_field.setKw_month( "month" );
+		}
+		else if ( datetimeField.equals( "DAY" ) )
+		{
+			non_second_primary_datetime_field.setKw_day( "day" );
+		}
+		else if ( datetimeField.equals( "HOUR" ) )
+		{
+			non_second_primary_datetime_field.setKw_hour( "hour" );
+		}
+		else if ( datetimeField.equals( "MINUTE" ) )
+		{
+			non_second_primary_datetime_field.setKw_minute( "minute" );
+		}
 	}
 
 	private void convertExpressionToDatetimeLiteral( TExpression expression,
