@@ -1,7 +1,0 @@
-package gudusoft.gsqlparser.sql2xml.model;
-
-
-public class equals_operator
-{
-
-}
