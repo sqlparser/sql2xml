@@ -1368,6 +1368,13 @@ public class AnsiGenerator implements SQL2XMLGenerator
 			TExpression expression,
 			common_value_expression commonValueExpression )
 	{
+		if ( isCaseAbbreviationExpression( expression ) )
+		{
+			reference_value_expression referenceValueExpression = new reference_value_expression( );
+			commonValueExpression.setReference_value_expression( referenceValueExpression );
+			convertExpressionToValueExpressionPrimary( expression,
+					referenceValueExpression.getValue_expression_primary( ) );
+		}
 		if ( isWindowFunctionExpression( expression ) )
 		{
 			reference_value_expression referenceValueExpression = new reference_value_expression( );
@@ -1920,10 +1927,56 @@ public class AnsiGenerator implements SQL2XMLGenerator
 					convertExpressionToWindowFunction( expression,
 							windowFunction );
 				}
+				else if ( isCaseAbbreviationExpression( expression ) )
+				{
+					case_expression caseExpression = new case_expression( );
+					nonparenthesizedValueExpressionPrimary.setCase_expression( caseExpression );
+					case_abbreviation caseAbbreviation = new case_abbreviation( );
+					caseExpression.setCase_abbreviation( caseAbbreviation );
+					convertExpressionToaseAbbreviationExpression( expression,
+							caseAbbreviation );
+				}
 				break;
 			default :
 		}
 
+	}
+
+	private void convertExpressionToaseAbbreviationExpression(
+			TExpression expression, case_abbreviation caseAbbreviation )
+	{
+		String functionName = expression.getFunctionCall( )
+				.getFunctionName( )
+				.toString( );
+		if ( "NULLIF".equalsIgnoreCase( functionName ) )
+		{
+			nullif nullif = new nullif( );
+			caseAbbreviation.setNullif( nullif );
+			TExpressionList expressions = expression.getFunctionCall( )
+					.getArgs( );
+			for ( int i = 0; i < expressions.size( ); i++ )
+			{
+				value_expression valueExpression = new value_expression( );
+				nullif.getValue_expression( ).add( valueExpression );
+				convertExpressionToValueExpression( expressions.getExpression( i ),
+						valueExpression );
+			}
+
+		}
+		else if ( "COALESCE".equalsIgnoreCase( functionName ) )
+		{
+			coalesce coalesce = new coalesce( );
+			caseAbbreviation.setCoalesce( coalesce );
+			TExpressionList expressions = expression.getFunctionCall( )
+					.getArgs( );
+			for ( int i = 0; i < expressions.size( ); i++ )
+			{
+				value_expression valueExpression = new value_expression( );
+				coalesce.getValue_expression( ).add( valueExpression );
+				convertExpressionToValueExpression( expressions.getExpression( i ),
+						valueExpression );
+			}
+		}
 	}
 
 	private boolean isWindowFunctionExpression( TExpression expression )
@@ -1934,6 +1987,21 @@ public class AnsiGenerator implements SQL2XMLGenerator
 					.getFunctionName( )
 					.toString( );
 			if ( Utility.isWindowFunction( functionName ) )
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private boolean isCaseAbbreviationExpression( TExpression expression )
+	{
+		if ( expression.getExpressionType( ) == EExpressionType.function_t )
+		{
+			String functionName = expression.getFunctionCall( )
+					.getFunctionName( )
+					.toString( );
+			if ( Utility.isCaseAbbreviationFunction( functionName ) )
 			{
 				return true;
 			}

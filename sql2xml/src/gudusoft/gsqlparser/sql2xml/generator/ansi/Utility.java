@@ -191,8 +191,7 @@ public class Utility
 	{
 		if ( string == null )
 			return false;
-		if ( string.trim( )
-				.matches( "(?i)(INTERVAL)\\s*.+?" ) )
+		if ( string.trim( ).matches( "(?i)(INTERVAL)\\s*.+?" ) )
 			return true;
 		return false;
 	}
@@ -241,4 +240,24 @@ public class Utility
 		}
 		return false;
 	}
+
+	static List<String> caseAbbreviationFunctions = new ArrayList<String>( );
+	static
+	{
+		caseAbbreviationFunctions.add( "NULLIF" );
+		caseAbbreviationFunctions.add( "COALESCE" );
+	}
+
+	public static boolean isCaseAbbreviationFunction( String functionName )
+	{
+		for ( int i = 0; i < caseAbbreviationFunctions.size( ); i++ )
+		{
+			if ( caseAbbreviationFunctions.get( i ).equalsIgnoreCase( functionName ) )
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
 }

@@ -7,7 +7,7 @@ public class as_clause
 {
 
 	@Element(required = false)
-	private String kw_as = "*";
+	private String kw_as;
 
 	@Element
 	private column_name column_name = new column_name( );
