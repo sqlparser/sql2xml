@@ -13,6 +13,7 @@ import gudusoft.gsqlparser.TStatementList;
 import gudusoft.gsqlparser.nodes.TAliasClause;
 import gudusoft.gsqlparser.nodes.TAnalyticFunction;
 import gudusoft.gsqlparser.nodes.TCTEList;
+import gudusoft.gsqlparser.nodes.TCaseExpression;
 import gudusoft.gsqlparser.nodes.TExpression;
 import gudusoft.gsqlparser.nodes.TExpressionList;
 import gudusoft.gsqlparser.nodes.TForUpdate;
@@ -29,6 +30,8 @@ import gudusoft.gsqlparser.nodes.TOrderByItem;
 import gudusoft.gsqlparser.nodes.TOrderByItemList;
 import gudusoft.gsqlparser.nodes.TResultColumn;
 import gudusoft.gsqlparser.nodes.TTable;
+import gudusoft.gsqlparser.nodes.TWhenClauseItem;
+import gudusoft.gsqlparser.nodes.TWhenClauseItemList;
 import gudusoft.gsqlparser.nodes.TWhereClause;
 import gudusoft.gsqlparser.sql2xml.generator.SQL2XMLGenerator;
 import gudusoft.gsqlparser.sql2xml.model.*;
@@ -1375,7 +1378,14 @@ public class AnsiGenerator implements SQL2XMLGenerator
 			convertExpressionToValueExpressionPrimary( expression,
 					referenceValueExpression.getValue_expression_primary( ) );
 		}
-		if ( isWindowFunctionExpression( expression ) )
+		else if ( isCaseExpression( expression ) )
+		{
+			reference_value_expression referenceValueExpression = new reference_value_expression( );
+			commonValueExpression.setReference_value_expression( referenceValueExpression );
+			convertExpressionToValueExpressionPrimary( expression,
+					referenceValueExpression.getValue_expression_primary( ) );
+		}
+		else if ( isWindowFunctionExpression( expression ) )
 		{
 			reference_value_expression referenceValueExpression = new reference_value_expression( );
 			commonValueExpression.setReference_value_expression( referenceValueExpression );
@@ -1418,6 +1428,11 @@ public class AnsiGenerator implements SQL2XMLGenerator
 					referenceValueExpression.getValue_expression_primary( ) );
 		}
 
+	}
+
+	private boolean isCaseExpression( TExpression expression )
+	{
+		return expression.getExpressionType( ) == EExpressionType.case_t;
 	}
 
 	private void convertExpressionToDatetimeValueExpression(
@@ -1933,16 +1948,159 @@ public class AnsiGenerator implements SQL2XMLGenerator
 					nonparenthesizedValueExpressionPrimary.setCase_expression( caseExpression );
 					case_abbreviation caseAbbreviation = new case_abbreviation( );
 					caseExpression.setCase_abbreviation( caseAbbreviation );
-					convertExpressionToaseAbbreviationExpression( expression,
+					convertExpressionToCaseAbbreviationExpression( expression,
 							caseAbbreviation );
 				}
+				break;
+			case case_t :
+			{
+				case_expression caseExpression = new case_expression( );
+				nonparenthesizedValueExpressionPrimary.setCase_expression( caseExpression );
+				case_specification caseSpecification = new case_specification( );
+				caseExpression.setCase_specification( caseSpecification );
+				convertExpressionToCaseSpecification( expression,
+						caseSpecification );
+			}
 				break;
 			default :
 		}
 
 	}
 
-	private void convertExpressionToaseAbbreviationExpression(
+	private void convertExpressionToCaseSpecification( TExpression expression,
+			case_specification caseSpecification )
+	{
+		TCaseExpression caseExpression = expression.getCaseExpression( );
+		if ( caseExpression.getInput_expr( ) != null )
+		{
+			simple_case simple_case = new simple_case( );
+			caseSpecification.setSimple_case( simple_case );
+			convertExpressionToCaseOperand( caseExpression.getInput_expr( ),
+					simple_case.getCase_operand( ) );
+			convertExpressionToSimpleWhenClause( caseExpression.getWhenClauseItemList( ),
+					simple_case.getSimple_when_clause( ) );
+			if ( caseExpression.getElse_expr( ) != null )
+			{
+				else_clause elseClause = new else_clause( );
+				simple_case.setElse_clause( elseClause );
+				convertExpressionToElseClause( caseExpression.getElse_expr( ),
+						elseClause );
+			}
+		}
+		else
+		{
+			searched_case searched_case = new searched_case( );
+			caseSpecification.setSearched_case( searched_case );
+			convertExpressionToSearchedCase( caseExpression, searched_case );
+		}
+	}
+
+	private void convertExpressionToSearchedCase(
+			TCaseExpression caseExpression, searched_case searched_case )
+	{
+
+	}
+
+	private void convertExpressionToElseClause( TExpression else_expr,
+			else_clause elseClause )
+	{
+		result result = elseClause.getResult( );
+		convertExpressionToResult( else_expr, result );
+	}
+
+	private void convertExpressionToResult( TExpression else_expr, result result )
+	{
+		if ( else_expr.toString( ).trim( ).equalsIgnoreCase( "NULL" ) )
+		{
+			result.setKw_null( "null" );
+		}
+		else
+		{
+			result_expression result_expression = new result_expression( );
+			result.setResult_expression( result_expression );
+			convertExpressionToValueExpression( else_expr,
+					result_expression.getValue_expression( ) );
+		}
+	}
+
+	private void convertExpressionToSimpleWhenClause(
+			TWhenClauseItemList whenClauseItemList,
+			List<simple_when_clause> simple_when_clauses )
+	{
+		for ( int i = 0; i < whenClauseItemList.size( ); i++ )
+		{
+			TWhenClauseItem item = whenClauseItemList.getWhenClauseItem( i );
+			simple_when_clause simple_when_clause = new simple_when_clause( );
+			simple_when_clauses.add( simple_when_clause );
+			List<when_operand> when_operands = simple_when_clause.getWhen_operand_list( )
+					.getWhen_operand( );
+			when_operand when_operand = new when_operand( );
+			when_operands.add( when_operand );
+			convertExpressionToWhenOperand( item.getComparison_expr( ),
+					when_operand );
+			convertExpressionToResult( item.getReturn_expr( ),
+					simple_when_clause.getResult( ) );
+		}
+	}
+
+	private void convertExpressionToWhenOperand( TExpression condition,
+			when_operand when_operand )
+	{
+		switch ( condition.getExpressionType( ) )
+		{
+			case simple_constant_t :
+			{
+				row_value_predicand row_value_predicand = new row_value_predicand( );
+				when_operand.setRow_value_predicand( row_value_predicand );
+				convertExpressionToRowValuePredicand( condition,
+						row_value_predicand );
+			}
+				break;
+			case simple_comparison_t :
+			{
+				row_value_predicand row_value_predicand = new row_value_predicand( );
+				when_operand.setRow_value_predicand( row_value_predicand );
+				convertExpressionToRowValuePredicand( condition.getLeftOperand( ),
+						row_value_predicand );
+				comparison_predicate_part_2 comparison_predicate_part_2 = new comparison_predicate_part_2( );
+				when_operand.setComparison_predicate_part_2( comparison_predicate_part_2 );
+				convertExpressionOperationToCompOp( condition.getComparisonOperator( ),
+						comparison_predicate_part_2.getComp_op( ) );
+				convertExpressionToRowValuePredicand( condition.getRightOperand( ),
+						comparison_predicate_part_2.getRow_value_predicand( ) );
+			}
+				break;
+			case in_t :
+			{
+				row_value_predicand row_value_predicand = new row_value_predicand( );
+				when_operand.setRow_value_predicand( row_value_predicand );
+				convertExpressionToRowValuePredicand( condition.getLeftOperand( ),
+						row_value_predicand );
+				in_predicate_part_2 in_predicate_part_2 = new in_predicate_part_2( );
+				when_operand.setIn_predicate_part_2( in_predicate_part_2 );
+				convertExpressionToRowValuePredicand( condition,
+						in_predicate_part_2 );
+			}
+				break;
+			case between_t :
+				break;
+			case null_t :
+				break;
+			case exists_t :
+				break;
+		}
+
+	}
+
+	private void convertExpressionToCaseOperand( TExpression input_expr,
+			case_operand case_operand )
+	{
+		row_value_predicand row_value_predicand = new row_value_predicand( );
+		case_operand.setRow_value_predicand( row_value_predicand );
+		convertExpressionToRowValuePredicand( input_expr, row_value_predicand );
+	}
+
+	private void convertExpressionToCaseAbbreviationExpression(
 			TExpression expression, case_abbreviation caseAbbreviation )
 	{
 		String functionName = expression.getFunctionCall( )
