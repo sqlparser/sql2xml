@@ -1991,14 +1991,33 @@ public class AnsiGenerator implements SQL2XMLGenerator
 		{
 			searched_case searched_case = new searched_case( );
 			caseSpecification.setSearched_case( searched_case );
-			convertExpressionToSearchedCase( caseExpression, searched_case );
+			convertExpressionToSearchedWhenClause( caseExpression.getWhenClauseItemList( ),
+					searched_case.getSearched_when_clause( ) );
+			if ( caseExpression.getElse_expr( ) != null )
+			{
+				else_clause elseClause = new else_clause( );
+				searched_case.setElse_clause( elseClause );
+				convertExpressionToElseClause( caseExpression.getElse_expr( ),
+						elseClause );
+			}
 		}
 	}
 
-	private void convertExpressionToSearchedCase(
-			TCaseExpression caseExpression, searched_case searched_case )
+	private void convertExpressionToSearchedWhenClause(
+			TWhenClauseItemList whenClauseItemList,
+			List<searched_when_clause> searched_when_clauses )
 	{
-
+		for ( int i = 0; i < whenClauseItemList.size( ); i++ )
+		{
+			TWhenClauseItem item = whenClauseItemList.getWhenClauseItem( i );
+			searched_when_clause searched_when_clause = new searched_when_clause( );
+			searched_when_clauses.add( searched_when_clause );
+			convertBooleanExpressionToModel( item.getComparison_expr( ),
+					searched_when_clause.getSearch_condition( )
+							.getBoolean_value_expression( ) );
+			convertExpressionToResult( item.getReturn_expr( ),
+					searched_when_clause.getResult( ) );
+		}
 	}
 
 	private void convertExpressionToElseClause( TExpression else_expr,
