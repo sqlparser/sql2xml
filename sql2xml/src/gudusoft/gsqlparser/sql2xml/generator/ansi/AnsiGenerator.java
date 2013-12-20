@@ -2018,7 +2018,18 @@ public class AnsiGenerator implements SQL2XMLGenerator
 				break;
 			case clob_t :
 				break;
-			case time_with_time_zone_t :
+			case timestamp_with_time_zone_t :
+			case timestamp_with_local_time_zone_t :
+			{
+				predefined_type type = createPredefinedType( cast_target );
+				datetime_type datetime_type = new datetime_type( );
+				type.setDatetime_type( datetime_type );
+				timestamp_precision_zone timestamp_precision_zone = new timestamp_precision_zone( );
+				datetime_type.setTimestamp_precision_zone( timestamp_precision_zone );
+				with_or_without_time_zone with_or_without_time_zone = new with_or_without_time_zone( );
+				timestamp_precision_zone.setWith_or_without_time_zone( with_or_without_time_zone );
+				with_or_without_time_zone.setWith_time_zone( new with_time_zone( ) );
+			}
 				break;
 		}
 	}
