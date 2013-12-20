@@ -30,6 +30,7 @@ import gudusoft.gsqlparser.nodes.TOrderByItem;
 import gudusoft.gsqlparser.nodes.TOrderByItemList;
 import gudusoft.gsqlparser.nodes.TResultColumn;
 import gudusoft.gsqlparser.nodes.TTable;
+import gudusoft.gsqlparser.nodes.TTypeName;
 import gudusoft.gsqlparser.nodes.TWhenClauseItem;
 import gudusoft.gsqlparser.nodes.TWhenClauseItemList;
 import gudusoft.gsqlparser.nodes.TWhereClause;
@@ -1371,7 +1372,14 @@ public class AnsiGenerator implements SQL2XMLGenerator
 			TExpression expression,
 			common_value_expression commonValueExpression )
 	{
-		if ( isCaseAbbreviationExpression( expression ) )
+		if ( isCastExpression( expression ) )
+		{
+			reference_value_expression referenceValueExpression = new reference_value_expression( );
+			commonValueExpression.setReference_value_expression( referenceValueExpression );
+			convertExpressionToValueExpressionPrimary( expression,
+					referenceValueExpression.getValue_expression_primary( ) );
+		}
+		else if ( isCaseAbbreviationExpression( expression ) )
 		{
 			reference_value_expression referenceValueExpression = new reference_value_expression( );
 			commonValueExpression.setReference_value_expression( referenceValueExpression );
@@ -1951,6 +1959,16 @@ public class AnsiGenerator implements SQL2XMLGenerator
 					convertExpressionToCaseAbbreviationExpression( expression,
 							caseAbbreviation );
 				}
+				else if ( isCastExpression( expression ) )
+				{
+					cast_specification castSpecification = new cast_specification( );
+					nonparenthesizedValueExpressionPrimary.setCast_specification( castSpecification );
+					convertExpressionToCastOperand( expression.getFunctionCall( )
+							.getExpr1( ),
+							castSpecification.getCast_operand( ) );
+					convertExpressionToCastTarget( expression.getFunctionCall( )
+							.getTypename( ), castSpecification.getCast_target( ) );
+				}
 				break;
 			case case_t :
 			{
@@ -1965,6 +1983,87 @@ public class AnsiGenerator implements SQL2XMLGenerator
 			default :
 		}
 
+	}
+
+	private void convertExpressionToCastTarget( TTypeName typename,
+			cast_target cast_target )
+	{
+		switch ( typename.getDataType( ) )
+		{
+			case varchar_t :
+			case varchar2_t :
+			{
+				predefined_type type = createPredefinedType( cast_target );
+				character_string_type_with_charater_set_collate character_string_type_with_charater_set_collate = new character_string_type_with_charater_set_collate( );
+				type.setCharacter_string_type_with_charater_set_collate( character_string_type_with_charater_set_collate );
+				character_string_type character_string_type = character_string_type_with_charater_set_collate.getCharacter_string_type( );
+				varchar_with_length varchar_with_length = new varchar_with_length( );
+				character_string_type.setVarchar_with_length( varchar_with_length );
+				if ( typename.getLength( ) != null
+						|| typename.getLength( ).toString( ).trim( ).length( ) == 0 )
+				{
+					length length = new length( );
+					varchar_with_length.setLength( length );
+					length.setUnsigned_integer( typename.getLength( )
+							.toString( ) );
+				}
+			}
+				break;
+			case nvarchar_t :
+			{
+
+			}
+				break;
+			case char_large_object_t :
+				break;
+			case clob_t :
+				break;
+			case time_with_time_zone_t :
+				break;
+		}
+	}
+
+	private predefined_type createPredefinedType( cast_target cast_target )
+	{
+		data_type dataType = new data_type( );
+		cast_target.setData_type( dataType );
+		predefined_type predefined_type = new predefined_type( );
+		dataType.setPredefined_type( predefined_type );
+		return predefined_type;
+	}
+
+	private void convertExpressionToCastOperand( TExpression expression,
+			cast_operand cast_operand )
+	{
+		String expressionContent = expression.toString( ).trim( ).toUpperCase( );
+		if ( expressionContent.equals( "NULL" ) )
+		{
+			implicitly_typed_value_specification implicitly_typed_value_specification = new implicitly_typed_value_specification( );
+			cast_operand.setImplicitly_typed_value_specification( implicitly_typed_value_specification );
+			implicitly_typed_value_specification.setNull_specification( new null_specification( ) );
+		}
+		else if ( expressionContent.startsWith( "ARRAY" ) )
+		{
+			implicitly_typed_value_specification implicitly_typed_value_specification = new implicitly_typed_value_specification( );
+			cast_operand.setImplicitly_typed_value_specification( implicitly_typed_value_specification );
+			empty_specification empty_specification = new empty_specification( );
+			implicitly_typed_value_specification.setEmpty_specification( empty_specification );
+			empty_specification.setKw_array( "array" );
+		}
+		else if ( expressionContent.startsWith( "MULTISET" ) )
+		{
+			implicitly_typed_value_specification implicitly_typed_value_specification = new implicitly_typed_value_specification( );
+			cast_operand.setImplicitly_typed_value_specification( implicitly_typed_value_specification );
+			empty_specification empty_specification = new empty_specification( );
+			implicitly_typed_value_specification.setEmpty_specification( empty_specification );
+			empty_specification.setKw_multiset( "multiset" );
+		}
+		else
+		{
+			value_expression value_expression = new value_expression( );
+			cast_operand.setValue_expression( value_expression );
+			convertExpressionToValueExpression( expression, value_expression );
+		}
 	}
 
 	private void convertExpressionToCaseSpecification( TExpression expression,
@@ -2164,6 +2263,22 @@ public class AnsiGenerator implements SQL2XMLGenerator
 					.getFunctionName( )
 					.toString( );
 			if ( Utility.isWindowFunction( functionName ) )
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private boolean isCastExpression( TExpression expression )
+	{
+		if ( expression.getExpressionType( ) == EExpressionType.function_t )
+		{
+			String functionName = expression.getFunctionCall( )
+					.getFunctionName( )
+					.toString( )
+					.trim( );
+			if ( "CAST".equalsIgnoreCase( functionName ) )
 			{
 				return true;
 			}

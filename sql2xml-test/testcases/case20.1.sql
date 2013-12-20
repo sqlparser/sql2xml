@@ -1,0 +1,1 @@
+select cast(empno as varchar2(10)) from emp;
