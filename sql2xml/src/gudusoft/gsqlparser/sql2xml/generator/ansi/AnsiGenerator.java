@@ -908,7 +908,7 @@ public class AnsiGenerator implements SQL2XMLGenerator
 		}
 		else if ( comparisonOperator.tokencode == (int) '<' )
 		{
-			compop.setLess_than_operator( ">" );
+			compop.setLess_than_operator( "<" );
 		}
 		else if ( comparisonOperator.tokencode == TBaseType.less_equal )
 		{
