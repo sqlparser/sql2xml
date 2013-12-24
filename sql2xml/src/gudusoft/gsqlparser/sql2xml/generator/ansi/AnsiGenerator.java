@@ -748,8 +748,11 @@ public class AnsiGenerator implements SQL2XMLGenerator
 	{
 		if ( condition.getNotToken( ) != null )
 		{
-			booleanFactor.setKw_not( "not" );
-			convertBooleanExpressionToBooleanTest( condition.getLeftOperand( ),
+			if ( condition.getExpressionType( ) != EExpressionType.in_t )
+			{
+				booleanFactor.setKw_not( "not" );
+			}
+			convertBooleanExpressionToBooleanTest( condition,
 					booleanFactor.getBoolean_test( ) );
 		}
 		else
