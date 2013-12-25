@@ -748,10 +748,7 @@ public class AnsiGenerator implements SQL2XMLGenerator
 	{
 		if ( condition.getNotToken( ) != null )
 		{
-			if ( condition.getExpressionType( ) != EExpressionType.in_t )
-			{
-				booleanFactor.setKw_not( "not" );
-			}
+			// booleanFactor.setKw_not( "not" );
 			convertBooleanExpressionToBooleanTest( condition,
 					booleanFactor.getBoolean_test( ) );
 		}
@@ -791,12 +788,19 @@ public class AnsiGenerator implements SQL2XMLGenerator
 				boolean_primary.setPredicate( predicate );
 				in_predicate inPredicate = new in_predicate( );
 				predicate.setIn_predicate( inPredicate );
-				convertInExpressionToInPredicate( condition, inPredicate );
+				convertExpressionToInPredicate( condition, inPredicate );
 			}
 				break;
 			case between_t :
 				break;
 			case null_t :
+			{
+				predicate predicate = new predicate( );
+				boolean_primary.setPredicate( predicate );
+				null_predicate nullPredicate = new null_predicate( );
+				predicate.setNull_predicate( nullPredicate );
+				convertExpressionToNullPredicate( condition, nullPredicate );
+			}
 				break;
 			case exists_t :
 				break;
@@ -804,16 +808,34 @@ public class AnsiGenerator implements SQL2XMLGenerator
 
 	}
 
-	private void convertInExpressionToInPredicate( TExpression condition,
+	private void convertExpressionToInPredicate( TExpression condition,
 			in_predicate inPredicate )
 	{
 		convertExpressionToRowValuePredicand( condition.getLeftOperand( ),
 				inPredicate.getRow_value_predicand( ) );
-		convertExpressionToRowValuePredicand( condition,
+		convertExpressionToInPredicatePart2( condition,
 				inPredicate.getIn_predicate_part_2( ) );
 	}
 
-	private void convertExpressionToRowValuePredicand( TExpression condition,
+	private void convertExpressionToNullPredicate( TExpression condition,
+			null_predicate nullPredicate )
+	{
+		convertExpressionToRowValuePredicand( condition.getLeftOperand( ),
+				nullPredicate.getRow_value_predicand( ) );
+		convertExpressionToNullPredicatePart2( condition,
+				nullPredicate.getNull_predicate_part_2( ) );
+	}
+
+	private void convertExpressionToNullPredicatePart2( TExpression condition,
+			null_predicate_part_2 null_predicate_part_2 )
+	{
+		if ( condition.getNotToken( ) != null )
+		{
+			null_predicate_part_2.setKw_not( "not" );
+		}
+	}
+
+	private void convertExpressionToInPredicatePart2( TExpression condition,
 			in_predicate_part_2 in_predicate_part_2 )
 	{
 		if ( condition.getNotToken( ) != null )
@@ -2210,13 +2232,23 @@ public class AnsiGenerator implements SQL2XMLGenerator
 						row_value_predicand );
 				in_predicate_part_2 in_predicate_part_2 = new in_predicate_part_2( );
 				when_operand.setIn_predicate_part_2( in_predicate_part_2 );
-				convertExpressionToRowValuePredicand( condition,
+				convertExpressionToInPredicatePart2( condition,
 						in_predicate_part_2 );
 			}
 				break;
 			case between_t :
 				break;
 			case null_t :
+			{
+				row_value_predicand row_value_predicand = new row_value_predicand( );
+				when_operand.setRow_value_predicand( row_value_predicand );
+				convertExpressionToRowValuePredicand( condition.getLeftOperand( ),
+						row_value_predicand );
+				null_predicate_part_2 null_predicate_part_2 = new null_predicate_part_2( );
+				when_operand.setNull_predicate_part_2( null_predicate_part_2 );
+				convertExpressionToNullPredicatePart2( condition,
+						null_predicate_part_2 );
+			}
 				break;
 			case exists_t :
 				break;
