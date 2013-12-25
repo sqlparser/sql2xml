@@ -792,6 +792,14 @@ public class AnsiGenerator implements SQL2XMLGenerator
 			}
 				break;
 			case between_t :
+			{
+				predicate predicate = new predicate( );
+				boolean_primary.setPredicate( predicate );
+				between_predicate betweenPredicate = new between_predicate( );
+				predicate.setBetween_predicate( betweenPredicate );
+				convertExpressionToBetweenPredicate( condition,
+						betweenPredicate );
+			}
 				break;
 			case null_t :
 			{
@@ -806,6 +814,34 @@ public class AnsiGenerator implements SQL2XMLGenerator
 				break;
 		}
 
+	}
+
+	private void convertExpressionToBetweenPredicate( TExpression condition,
+			between_predicate betweenPredicate )
+	{
+		convertExpressionToRowValuePredicand( condition.getBetweenOperand( ),
+				betweenPredicate.getRow_value_predicand( ) );
+		convertExpressionToBetweenPredicatePart2( condition,
+				betweenPredicate.getBetween_predicate_part_2( ) );
+	}
+
+	private void convertExpressionToBetweenPredicatePart2(
+			TExpression condition,
+			between_predicate_part_2 between_predicate_part_2 )
+	{
+		if ( condition.getNotToken( ) != null )
+		{
+			between_predicate_part_2.setKw_not( "not" );
+		}
+
+		TExpression leftExpression = condition.getLeftOperand( );
+		convertExpressionToRowValueRredicand( leftExpression,
+				between_predicate_part_2,
+				true );
+		TExpression rightExpression = condition.getRightOperand( );
+		convertExpressionToRowValueRredicand( rightExpression,
+				between_predicate_part_2,
+				false );
 	}
 
 	private void convertExpressionToInPredicate( TExpression condition,
@@ -970,6 +1006,56 @@ public class AnsiGenerator implements SQL2XMLGenerator
 		{
 			row_value_constructor_predicand rowValueConstructorPredicand = new row_value_constructor_predicand( );
 			rowValuePredicand.setRow_value_constructor_predicand( rowValueConstructorPredicand );
+		}
+	}
+
+	private void convertExpressionToRowValueRredicand( TExpression expression,
+			between_predicate_part_2 between_predicate_part_2,
+			boolean leftExpression )
+	{
+		if ( expression.getExpressionType( ) == EExpressionType.simple_constant_t
+				|| expression.getExpressionType( ) == EExpressionType.simple_object_name_t )
+		{
+			row_value_special_case rowValueSpecialCase = new row_value_special_case( );
+			if ( leftExpression )
+			{
+				between_predicate_part_2.setLeft_row_value_special_case( rowValueSpecialCase );
+			}
+			else
+			{
+				between_predicate_part_2.setRight_row_value_special_case( rowValueSpecialCase );
+			}
+			convertExpressionToNonParenthesizedValueExpression( expression,
+					rowValueSpecialCase.getNonparenthesized_value_expression_primary( ) );
+		}
+		else if ( expression.getExpressionType( ) == EExpressionType.function_t
+				&& ( Utility.isAggregateFunction( expression.getFunctionCall( )
+						.getFunctionName( )
+						.toString( ) ) ) )
+		{
+			row_value_special_case rowValueSpecialCase = new row_value_special_case( );
+			if ( leftExpression )
+			{
+				between_predicate_part_2.setLeft_row_value_special_case( rowValueSpecialCase );
+			}
+			else
+			{
+				between_predicate_part_2.setRight_row_value_special_case( rowValueSpecialCase );
+			}
+			convertExpressionToNonParenthesizedValueExpression( expression,
+					rowValueSpecialCase.getNonparenthesized_value_expression_primary( ) );
+		}
+		else
+		{
+			row_value_constructor_predicand rowValueConstructorPredicand = new row_value_constructor_predicand( );
+			if ( leftExpression )
+			{
+				between_predicate_part_2.setLeft_row_value_constructor_predicand( rowValueConstructorPredicand );
+			}
+			else
+			{
+				between_predicate_part_2.setRight_row_value_constructor_predicand( rowValueConstructorPredicand );
+			}
 		}
 	}
 
@@ -2237,6 +2323,16 @@ public class AnsiGenerator implements SQL2XMLGenerator
 			}
 				break;
 			case between_t :
+			{
+				row_value_predicand row_value_predicand = new row_value_predicand( );
+				when_operand.setRow_value_predicand( row_value_predicand );
+				convertExpressionToRowValuePredicand( condition.getBetweenOperand( ),
+						row_value_predicand );
+				between_predicate_part_2 between_predicate_part_2 = new between_predicate_part_2( );
+				when_operand.setBetween_predicate_part_2( between_predicate_part_2 );
+				convertExpressionToBetweenPredicatePart2( condition,
+						between_predicate_part_2 );;
+			}
 				break;
 			case null_t :
 			{
