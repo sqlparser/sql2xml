@@ -746,10 +746,10 @@ public class AnsiGenerator implements SQL2XMLGenerator
 	private void convertBooleanExpressionToBooleanFactor(
 			TExpression condition, boolean_factor booleanFactor )
 	{
-		if ( condition.getNotToken( ) != null )
+		if ( condition.getExpressionType( ) == EExpressionType.logical_not_t )
 		{
-			// booleanFactor.setKw_not( "not" );
-			convertBooleanExpressionToBooleanTest( condition,
+			booleanFactor.setKw_not( "not" );
+			convertBooleanExpressionToBooleanTest( condition.getRightOperand( ),
 					booleanFactor.getBoolean_test( ) );
 		}
 		else
@@ -811,8 +811,25 @@ public class AnsiGenerator implements SQL2XMLGenerator
 			}
 				break;
 			case exists_t :
+			{
+				predicate predicate = new predicate( );
+				boolean_primary.setPredicate( predicate );
+				exists_predicate existsPredicate = new exists_predicate( );
+				predicate.setExists_predicate( existsPredicate );
+				convertExpressionToExistsPredicate( condition, existsPredicate );
+			}
 				break;
 		}
+
+	}
+
+	private void convertExpressionToExistsPredicate( TExpression expression,
+			exists_predicate existsPredicate )
+	{
+		convertSelectToQueryExpression( expression.getSubQuery( ),
+				existsPredicate.getTable_subquery( )
+						.getSubquery( )
+						.getQuery_expression( ) );
 
 	}
 
@@ -2345,8 +2362,6 @@ public class AnsiGenerator implements SQL2XMLGenerator
 				convertExpressionToNullPredicatePart2( condition,
 						null_predicate_part_2 );
 			}
-				break;
-			case exists_t :
 				break;
 		}
 
