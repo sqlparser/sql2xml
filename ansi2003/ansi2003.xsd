@@ -4362,17 +4362,17 @@
 
 <xs:element name="null_specification">
 	<xs:complexType>
-		<xs:choice>
+		<xs:sequence>
 			<xs:element ref="kw_null"/>
-		</xs:choice>
+		</xs:sequence>
 	</xs:complexType>
 </xs:element>
 
 <xs:element name="default_specification">
 	<xs:complexType>
-		<xs:choice>
+		<xs:sequence>
 			<xs:element ref="kw_default"/>
-		</xs:choice>
+		</xs:sequence>
 	</xs:complexType>
 </xs:element>
 
@@ -10924,7 +10924,7 @@
 					</xs:sequence>
 				</xs:complexType>
 			</xs:element>
-			<xs:element ref="collate_clause"/>
+			<xs:element ref="collate_clause"  minOccurs="0"/>
 		</xs:sequence>
 	</xs:complexType>
 </xs:element>	

@@ -2,6 +2,7 @@
 package gudusoft.gsqlparser.sql2xml.generator.ansi;
 
 import gudusoft.gsqlparser.TCustomSqlStatement;
+import gudusoft.gsqlparser.stmt.TCreateTableSqlStatement;
 import gudusoft.gsqlparser.stmt.TDeleteSqlStatement;
 import gudusoft.gsqlparser.stmt.TInsertSqlStatement;
 import gudusoft.gsqlparser.stmt.TMergeSqlStatement;
@@ -21,6 +22,26 @@ public class Utility
 				|| stmt instanceof TUpdateSqlStatement
 				|| stmt instanceof TDeleteSqlStatement
 				|| stmt instanceof TMergeSqlStatement )
+			return true;
+		return false;
+	}
+
+	public static boolean isSql_schema_statement( TCustomSqlStatement stmt )
+	{
+		if ( stmt instanceof TCreateTableSqlStatement )
+			return true;
+		return false;
+	}
+
+	public static boolean isDirectly_executable_statement(
+			TCustomSqlStatement stmt )
+	{
+		if ( stmt instanceof TSelectSqlStatement
+				|| stmt instanceof TInsertSqlStatement
+				|| stmt instanceof TUpdateSqlStatement
+				|| stmt instanceof TDeleteSqlStatement
+				|| stmt instanceof TMergeSqlStatement
+				|| stmt instanceof TCreateTableSqlStatement )
 			return true;
 		return false;
 	}
@@ -252,7 +273,8 @@ public class Utility
 	{
 		for ( int i = 0; i < caseAbbreviationFunctions.size( ); i++ )
 		{
-			if ( caseAbbreviationFunctions.get( i ).equalsIgnoreCase( functionName ) )
+			if ( caseAbbreviationFunctions.get( i )
+					.equalsIgnoreCase( functionName ) )
 			{
 				return true;
 			}

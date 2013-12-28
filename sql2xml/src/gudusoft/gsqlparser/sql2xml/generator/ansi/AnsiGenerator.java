@@ -14,6 +14,8 @@ import gudusoft.gsqlparser.nodes.TAliasClause;
 import gudusoft.gsqlparser.nodes.TAnalyticFunction;
 import gudusoft.gsqlparser.nodes.TCTEList;
 import gudusoft.gsqlparser.nodes.TCaseExpression;
+import gudusoft.gsqlparser.nodes.TColumnDefinition;
+import gudusoft.gsqlparser.nodes.TColumnDefinitionList;
 import gudusoft.gsqlparser.nodes.TExpression;
 import gudusoft.gsqlparser.nodes.TExpressionList;
 import gudusoft.gsqlparser.nodes.TForUpdate;
@@ -36,6 +38,7 @@ import gudusoft.gsqlparser.nodes.TWhenClauseItemList;
 import gudusoft.gsqlparser.nodes.TWhereClause;
 import gudusoft.gsqlparser.sql2xml.generator.SQL2XMLGenerator;
 import gudusoft.gsqlparser.sql2xml.model.*;
+import gudusoft.gsqlparser.stmt.TCreateTableSqlStatement;
 import gudusoft.gsqlparser.stmt.TDeleteSqlStatement;
 import gudusoft.gsqlparser.stmt.TInsertSqlStatement;
 import gudusoft.gsqlparser.stmt.TMergeSqlStatement;
@@ -145,47 +148,115 @@ public class AnsiGenerator implements SQL2XMLGenerator
 	protected void convertStmt2Model( TCustomSqlStatement stmt,
 			directly_executable_statement directlyExecutableStatement )
 	{
-		if ( Utility.isDirect_sql_data_statement( stmt ) )
+		if ( Utility.isDirectly_executable_statement( stmt ) )
 		{
-			direct_sql_data_statement directSqlDataStatement = new direct_sql_data_statement( );
-			directlyExecutableStatement.setDirect_sql_data_statement( directSqlDataStatement );
+			if ( Utility.isDirect_sql_data_statement( stmt ) )
+			{
+				direct_sql_data_statement directSqlDataStatement = new direct_sql_data_statement( );
+				directlyExecutableStatement.setDirect_sql_data_statement( directSqlDataStatement );
 
-			if ( stmt instanceof TSelectSqlStatement )
-			{
-				TSelectSqlStatement select = (TSelectSqlStatement) stmt;
-				direct_select_statement_multiple_rows directSelectStatementMultipleRows = new direct_select_statement_multiple_rows( );
-				directSqlDataStatement.setDirect_select_statement_multiple_rows( directSelectStatementMultipleRows );
-				convertSelectStmt2Model( select,
-						directSelectStatementMultipleRows );
+				if ( stmt instanceof TSelectSqlStatement )
+				{
+					TSelectSqlStatement select = (TSelectSqlStatement) stmt;
+					direct_select_statement_multiple_rows directSelectStatementMultipleRows = new direct_select_statement_multiple_rows( );
+					directSqlDataStatement.setDirect_select_statement_multiple_rows( directSelectStatementMultipleRows );
+					convertSelectStmt2Model( select,
+							directSelectStatementMultipleRows );
+				}
+				else if ( stmt instanceof TInsertSqlStatement )
+				{
+					TInsertSqlStatement insert = (TInsertSqlStatement) stmt;
+					insert_statement insertStatement = new insert_statement( );
+					directSqlDataStatement.setInsert_statement( insertStatement );
+					convertInsertStmt2Model( insert, insertStatement );
+				}
+				else if ( stmt instanceof TUpdateSqlStatement )
+				{
+					TUpdateSqlStatement update = (TUpdateSqlStatement) stmt;
+					update_statement_searched updateStatementSearched = new update_statement_searched( );
+					directSqlDataStatement.setUpdate_statement_searched( updateStatementSearched );
+					convertUpdateStmt2Model( update, updateStatementSearched );
+				}
+				else if ( stmt instanceof TDeleteSqlStatement )
+				{
+					TDeleteSqlStatement delete = (TDeleteSqlStatement) stmt;
+					delete_statement_searched deleteStatementSearched = new delete_statement_searched( );
+					directSqlDataStatement.setDelete_statement_searched( deleteStatementSearched );
+					convertDeleteStmt2Model( delete, deleteStatementSearched );
+				}
+				else if ( stmt instanceof TMergeSqlStatement )
+				{
+					TMergeSqlStatement merge = (TMergeSqlStatement) stmt;
+					merge_statement mergeStatement = new merge_statement( );
+					directSqlDataStatement.setMerge_statement( mergeStatement );
+					convertMergeStmt2Model( merge, mergeStatement );
+				}
 			}
-			else if ( stmt instanceof TInsertSqlStatement )
+			else if ( Utility.isSql_schema_statement( stmt ) )
 			{
-				TInsertSqlStatement insert = (TInsertSqlStatement) stmt;
-				insert_statement insertStatement = new insert_statement( );
-				directSqlDataStatement.setInsert_statement( insertStatement );
-				convertInsertStmt2Model( insert, insertStatement );
+				sql_schema_statement sqlSchemaStatement = new sql_schema_statement( );
+				directlyExecutableStatement.setSql_schema_statement( sqlSchemaStatement );
+				if ( stmt instanceof TCreateTableSqlStatement )
+				{
+					TCreateTableSqlStatement createTable = (TCreateTableSqlStatement) stmt;
+					sql_schema_definition_statement sql_schema_definition_statement = new sql_schema_definition_statement( );
+					sqlSchemaStatement.setSql_schema_definition_statement( sql_schema_definition_statement );
+					table_definition table_definition = new table_definition( );
+					sql_schema_definition_statement.setTable_definition( table_definition );
+					convertCreateTableStmt2Model( createTable, table_definition );
+				}
 			}
-			else if ( stmt instanceof TUpdateSqlStatement )
-			{
-				TUpdateSqlStatement update = (TUpdateSqlStatement) stmt;
-				update_statement_searched updateStatementSearched = new update_statement_searched( );
-				directSqlDataStatement.setUpdate_statement_searched( updateStatementSearched );
-				convertUpdateStmt2Model( update, updateStatementSearched );
-			}
-			else if ( stmt instanceof TDeleteSqlStatement )
-			{
-				TDeleteSqlStatement delete = (TDeleteSqlStatement) stmt;
-				delete_statement_searched deleteStatementSearched = new delete_statement_searched( );
-				directSqlDataStatement.setDelete_statement_searched( deleteStatementSearched );
-				convertDeleteStmt2Model( delete, deleteStatementSearched );
-			}
-			else if ( stmt instanceof TMergeSqlStatement )
-			{
-				TMergeSqlStatement merge = (TMergeSqlStatement) stmt;
-				merge_statement mergeStatement = new merge_statement( );
-				directSqlDataStatement.setMerge_statement( mergeStatement );
-				convertMergeStmt2Model( merge, mergeStatement );
-			}
+		}
+	}
+
+	private void convertCreateTableStmt2Model(
+			TCreateTableSqlStatement createTable,
+			table_definition table_definition )
+	{
+		convertTableNameToModel( createTable.getTableName( ),
+				table_definition.getTable_name( ) );
+
+		if ( createTable.getColumnList( ) != null )
+		{
+			table_element_list table_element_list = new table_element_list( );
+			table_definition.getTable_contents_source( )
+					.setTable_element_list( table_element_list );
+			convertTableColumnListToTableElementList( createTable.getColumnList( ),
+					table_element_list );
+		}
+	}
+
+	private void convertTableColumnListToTableElementList(
+			TColumnDefinitionList columnList,
+			table_element_list table_element_list )
+	{
+		List<table_element> table_elements = table_element_list.getTable_element( );
+		for ( int i = 0; i < columnList.size( ); i++ )
+		{
+			TColumnDefinition columnDef = columnList.getColumn( i );
+			table_element element = new table_element( );
+			table_elements.add( element );
+			convertColumnDefinitionToTableElement( columnDef, element );
+		}
+	}
+
+	private void convertColumnDefinitionToTableElement(
+			TColumnDefinition columnDef, table_element element )
+	{
+		column_definition column_definition = new column_definition( );
+		element.setColumn_definition( column_definition );
+		convertObjectName2Model( columnDef.getColumnName( ),
+				column_definition.getColumn_name( ).getIdentifier( ) );
+
+		if ( columnDef.getDatatype( ) != null )
+		{
+			data_type_or_domain_name data_type_or_domain_name = new data_type_or_domain_name( );
+			column_definition.setData_type_or_domain_name( data_type_or_domain_name );
+
+			data_type data_type = new data_type( );
+			data_type_or_domain_name.setData_type( data_type );
+
+			convertTypeNameToDataType( columnDef.getDatatype( ), data_type );
 		}
 	}
 
@@ -855,6 +926,51 @@ public class AnsiGenerator implements SQL2XMLGenerator
 				break;
 		}
 
+	}
+
+	private void convertExpressionToMemberPredicate( TExpression condition,
+			member_predicate memberPredicate )
+	{
+		convertExpressionToRowValuePredicand( condition.getLeftOperand( ),
+				memberPredicate.getRow_value_predicand( ) );
+		convertExpressionToMemberPredicatePart2( condition,
+				memberPredicate.getMember_predicate_part_2( ) );
+
+	}
+
+	private void convertExpressionToMemberPredicatePart2(
+			TExpression condition,
+			member_predicate_part_2 member_predicate_part_2 )
+	{
+		if ( condition.getNotToken( ) != null )
+		{
+			member_predicate_part_2.setKw_not( "not" );
+		}
+
+		if ( SourceTokenSearcher.indexOf( condition.getStartToken( ).container,
+				condition.getStartToken( ).posinlist,
+				condition.getEndToken( ).posinlist,
+				"OF" ) != -1 )
+		{
+			member_predicate_part_2.setKw_of( "of" );
+		}
+
+		convertExpressionToMultisetValueExpression( condition.getRightOperand( ),
+				member_predicate_part_2.getMultiset_value_expression( ) );
+	}
+
+	private void convertExpressionToMultisetValueExpression(
+			TExpression expression,
+			multiset_value_expression multiset_value_expression )
+	{
+		multiset_term multiset_term = new multiset_term( );
+		multiset_value_expression.setMultiset_term( multiset_term );
+		multiset_primary multiset_primary = new multiset_primary( );
+		multiset_term.setMultiset_primary( multiset_primary );
+		value_expression_primary value_expression_primary = new value_expression_primary( );
+		multiset_primary.setValue_expression_primary( value_expression_primary );
+		convertExpressionToValueExpressionPrimary( expression,
+				value_expression_primary );
 	}
 
 	private void convertExpressionToMemberPredicate( TExpression condition,
@@ -2206,8 +2322,11 @@ public class AnsiGenerator implements SQL2XMLGenerator
 					convertExpressionToCastOperand( expression.getFunctionCall( )
 							.getExpr1( ),
 							castSpecification.getCast_operand( ) );
-					convertExpressionToCastTarget( expression.getFunctionCall( )
-							.getTypename( ), castSpecification.getCast_target( ) );
+					data_type data_type = new data_type( );
+					castSpecification.getCast_target( )
+							.setData_type( data_type );
+					convertTypeNameToDataType( expression.getFunctionCall( )
+							.getTypename( ), data_type );
 				}
 				break;
 			case case_t :
@@ -2225,15 +2344,83 @@ public class AnsiGenerator implements SQL2XMLGenerator
 
 	}
 
-	private void convertExpressionToCastTarget( TTypeName typename,
-			cast_target cast_target )
+	private void convertTypeNameToDataType( TTypeName typename,
+			data_type data_type )
 	{
 		switch ( typename.getDataType( ) )
 		{
+			case dec_t :
+			{
+				predefined_type type = createPredefinedType( data_type );
+				numeric_type numeric_type = new numeric_type( );
+				type.setNumeric_type( numeric_type );
+				exact_numeric_type exact_numeric_type = new exact_numeric_type( );
+				numeric_type.setExact_numeric_type( exact_numeric_type );
+				if ( typename.toString( ).toUpperCase( ).startsWith( "DECIMAL" ) )
+				{
+					decimal_with_precision_scale decimal_with_precision_scale = new decimal_with_precision_scale( );
+					exact_numeric_type.setDecimal_with_precision_scale( decimal_with_precision_scale );
+					decimal_with_precision_scale.setPrecision_scale( getTypeNamePrecision( typename ) );
+				}
+				else if ( typename.toString( )
+						.toUpperCase( )
+						.startsWith( "DEC" ) )
+				{
+					dec_with_precision_scale dec_with_precision_scale = new dec_with_precision_scale( );
+					exact_numeric_type.setDec_with_precision_scale( dec_with_precision_scale );
+					dec_with_precision_scale.setPrecision_scale( getTypeNamePrecision( typename ) );
+				}
+			}
+				break;
+			case smallint_t :
+			{
+				predefined_type type = createPredefinedType( data_type );
+				numeric_type numeric_type = new numeric_type( );
+				type.setNumeric_type( numeric_type );
+				exact_numeric_type exact_numeric_type = new exact_numeric_type( );
+				numeric_type.setExact_numeric_type( exact_numeric_type );
+				exact_numeric_type.setKw_smallint( "smallint" );
+			}
+				break;
+			case int_t :
+			{
+				predefined_type type = createPredefinedType( data_type );
+				numeric_type numeric_type = new numeric_type( );
+				type.setNumeric_type( numeric_type );
+				exact_numeric_type exact_numeric_type = new exact_numeric_type( );
+				numeric_type.setExact_numeric_type( exact_numeric_type );
+				if ( typename.toString( ).equalsIgnoreCase( "INTEGER" ) )
+					exact_numeric_type.setKw_integer( "integer" );
+				else if ( typename.toString( ).equalsIgnoreCase( "INT" ) )
+					exact_numeric_type.setKw_int( "int" );
+			}
+				break;
+			case bigint_t :
+			{
+				predefined_type type = createPredefinedType( data_type );
+				numeric_type numeric_type = new numeric_type( );
+				type.setNumeric_type( numeric_type );
+				exact_numeric_type exact_numeric_type = new exact_numeric_type( );
+				numeric_type.setExact_numeric_type( exact_numeric_type );
+				exact_numeric_type.setKw_bigint( "bigint" );
+			}
+				break;
+			case numeric_t :
+			{
+				predefined_type type = createPredefinedType( data_type );
+				numeric_type numeric_type = new numeric_type( );
+				type.setNumeric_type( numeric_type );
+				exact_numeric_type exact_numeric_type = new exact_numeric_type( );
+				numeric_type.setExact_numeric_type( exact_numeric_type );
+				numeric_with_precision_scale numeric_with_precision_scale = new numeric_with_precision_scale( );
+				exact_numeric_type.setNumeric_with_precision_scale( numeric_with_precision_scale );
+				numeric_with_precision_scale.setPrecision_scale( getTypeNamePrecision( typename ) );
+			}
+				break;
 			case varchar_t :
 			case varchar2_t :
 			{
-				predefined_type type = createPredefinedType( cast_target );
+				predefined_type type = createPredefinedType( data_type );
 				character_string_type_with_charater_set_collate character_string_type_with_charater_set_collate = new character_string_type_with_charater_set_collate( );
 				type.setCharacter_string_type_with_charater_set_collate( character_string_type_with_charater_set_collate );
 				character_string_type character_string_type = character_string_type_with_charater_set_collate.getCharacter_string_type( );
@@ -2261,7 +2448,7 @@ public class AnsiGenerator implements SQL2XMLGenerator
 			case timestamp_with_time_zone_t :
 			case timestamp_with_local_time_zone_t :
 			{
-				predefined_type type = createPredefinedType( cast_target );
+				predefined_type type = createPredefinedType( data_type );
 				datetime_type datetime_type = new datetime_type( );
 				type.setDatetime_type( datetime_type );
 				timestamp_precision_zone timestamp_precision_zone = new timestamp_precision_zone( );
@@ -2274,10 +2461,26 @@ public class AnsiGenerator implements SQL2XMLGenerator
 		}
 	}
 
-	private predefined_type createPredefinedType( cast_target cast_target )
+	private precision_scale getTypeNamePrecision( TTypeName typename )
 	{
-		data_type dataType = new data_type( );
-		cast_target.setData_type( dataType );
+		precision_scale precision_scale = null;
+		if ( typename.getPrecision( ) != null )
+		{
+			precision_scale = new precision_scale( );
+			precision_scale.getPrecision( )
+					.setUnsigned_integer( typename.getPrecision( ).toString( ) );
+			if ( typename.getScale( ) != null )
+			{
+				scale scale = new scale( );
+				precision_scale.setScale( scale );
+				scale.setUnsigned_integer( typename.getScale( ).toString( ) );
+			}
+		}
+		return precision_scale;
+	}
+
+	private predefined_type createPredefinedType( data_type dataType )
+	{
 		predefined_type predefined_type = new predefined_type( );
 		dataType.setPredefined_type( predefined_type );
 		return predefined_type;

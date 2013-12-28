@@ -10924,7 +10924,7 @@
 					</xs:sequence>
 				</xs:complexType>
 			</xs:element>
-			<xs:element ref="collate_clause"/>
+			<xs:element ref="collate_clause"  minOccurs="0"/>
 		</xs:sequence>
 	</xs:complexType>
 </xs:element>	
