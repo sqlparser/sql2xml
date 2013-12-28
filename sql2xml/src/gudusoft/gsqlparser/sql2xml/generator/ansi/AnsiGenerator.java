@@ -2302,6 +2302,7 @@ public class AnsiGenerator implements SQL2XMLGenerator
 	private void convertTypeNameToDataType( TTypeName typename,
 			data_type data_type )
 	{
+
 		switch ( typename.getDataType( ) )
 		{
 			case float_t :
@@ -2411,6 +2412,42 @@ public class AnsiGenerator implements SQL2XMLGenerator
 				numeric_with_precision_scale.setPrecision_scale( getTypeNamePrecision( typename ) );
 			}
 				break;
+			case char_t :
+			{
+				predefined_type type = createPredefinedType( data_type );
+				character_string_type_with_charater_set_collate character_string_type_with_charater_set_collate = new character_string_type_with_charater_set_collate( );
+				type.setCharacter_string_type_with_charater_set_collate( character_string_type_with_charater_set_collate );
+				character_string_type character_string_type = character_string_type_with_charater_set_collate.getCharacter_string_type( );
+				if ( typename.toString( )
+						.toUpperCase( )
+						.startsWith( "CHARACTER" ) )
+				{
+					character_with_length character_with_length = new character_with_length( );
+					character_string_type.setCharacter_with_length( character_with_length );
+					if ( typename.getLength( ) != null )
+					{
+						length length = new length( );
+						character_with_length.setLength( length );
+						length.setUnsigned_integer( typename.getLength( )
+								.toString( ) );
+					}
+				}
+				else if ( typename.toString( )
+						.toUpperCase( )
+						.startsWith( "CHAR" ) )
+				{
+					char_with_length char_with_length = new char_with_length( );
+					character_string_type.setChar_with_length( char_with_length );
+					if ( typename.getLength( ) != null )
+					{
+						length length = new length( );
+						char_with_length.setLength( length );
+						length.setUnsigned_integer( typename.getLength( )
+								.toString( ) );
+					}
+				}
+			}
+				break;
 			case varchar_t :
 			case varchar2_t :
 			{
@@ -2418,15 +2455,43 @@ public class AnsiGenerator implements SQL2XMLGenerator
 				character_string_type_with_charater_set_collate character_string_type_with_charater_set_collate = new character_string_type_with_charater_set_collate( );
 				type.setCharacter_string_type_with_charater_set_collate( character_string_type_with_charater_set_collate );
 				character_string_type character_string_type = character_string_type_with_charater_set_collate.getCharacter_string_type( );
-				varchar_with_length varchar_with_length = new varchar_with_length( );
-				character_string_type.setVarchar_with_length( varchar_with_length );
-				if ( typename.getLength( ) != null
-						|| typename.getLength( ).toString( ).trim( ).length( ) == 0 )
+				if ( typename.toString( ).toUpperCase( ).startsWith( "VARCHAR" ) )
 				{
-					length length = new length( );
-					varchar_with_length.setLength( length );
-					length.setUnsigned_integer( typename.getLength( )
-							.toString( ) );
+					varchar_with_length varchar_with_length = new varchar_with_length( );
+					character_string_type.setVarchar_with_length( varchar_with_length );
+					if ( typename.getLength( ) != null )
+					{
+						length length = new length( );
+						varchar_with_length.setLength( length );
+						length.setUnsigned_integer( typename.getLength( )
+								.toString( ) );
+					}
+				}
+				else if ( typename.toString( )
+						.matches( "(?i).*char\\s+varying.*" ) )
+				{
+					char_varying char_varying = new char_varying( );
+					character_string_type.setChar_varying( char_varying );
+					if ( typename.getLength( ) != null )
+					{
+						length length = new length( );
+						char_varying.setLength( length );
+						length.setUnsigned_integer( typename.getLength( )
+								.toString( ) );
+					}
+				}
+				else if ( typename.toString( )
+						.matches( "(?i).*character\\s+varying.*" ) )
+				{
+					character_varying_with_length character_varying_with_length = new character_varying_with_length( );
+					character_string_type.setCharacter_varying_with_length( character_varying_with_length );
+					if ( typename.getLength( ) != null )
+					{
+						length length = new length( );
+						character_varying_with_length.setLength( length );
+						length.setUnsigned_integer( typename.getLength( )
+								.toString( ) );
+					}
 				}
 			}
 				break;
@@ -2438,6 +2503,16 @@ public class AnsiGenerator implements SQL2XMLGenerator
 			case char_large_object_t :
 				break;
 			case clob_t :
+			{
+				predefined_type type = createPredefinedType( data_type );
+				character_string_type_with_charater_set_collate character_string_type_with_charater_set_collate = new character_string_type_with_charater_set_collate( );
+				type.setCharacter_string_type_with_charater_set_collate( character_string_type_with_charater_set_collate );
+				character_string_type character_string_type = character_string_type_with_charater_set_collate.getCharacter_string_type( );
+				character_large_object_type character_large_object_type = new character_large_object_type( );
+				character_string_type.setCharacter_large_object_type( character_large_object_type );
+				clob_with_length clob_with_length = new clob_with_length( );
+				character_large_object_type.setClob_with_length( clob_with_length );
+			}
 				break;
 			case timestamp_with_time_zone_t :
 			case timestamp_with_local_time_zone_t :
