@@ -819,6 +819,16 @@ public class AnsiGenerator implements SQL2XMLGenerator
 				convertExpressionToExistsPredicate( condition, existsPredicate );
 			}
 				break;
+			case pattern_matching_t :
+			{
+
+				predicate predicate = new predicate( );
+				boolean_primary.setPredicate( predicate );
+				like_predicate likePredicate = new like_predicate( );
+				predicate.setLike_predicate( likePredicate );
+				convertExpressionToLikePredicate( condition, likePredicate );
+			}
+				break;
 			case parenthesis_t :
 			{
 				boolean_predicand boolean_predicand = new boolean_predicand( );
@@ -829,8 +839,46 @@ public class AnsiGenerator implements SQL2XMLGenerator
 						parenthesized_boolean_value_expression.getBoolean_value_expression( ) );
 			}
 				break;
+			case is_of_type_t :
+			{
+
+			}
+				break;
 		}
 
+	}
+
+	private void convertExpressionToLikePredicate( TExpression condition,
+			like_predicate likePredicate )
+	{
+		character_like_predicate character_like_predicate = new character_like_predicate( );
+		likePredicate.setCharacter_like_predicate( character_like_predicate );
+		convertExpressionToRowValuePredicand( condition.getLeftOperand( ),
+				character_like_predicate.getRow_value_predicand( ) );
+		convertExpressionToCharacterLikePredicatePart2( condition,
+				character_like_predicate.getCharacter_like_predicate_part_2( ) );
+	}
+
+	private void convertExpressionToCharacterLikePredicatePart2(
+			TExpression condition,
+			character_like_predicate_part_2 character_like_predicate_part_2 )
+	{
+		if ( condition.getNotToken( ) != null )
+		{
+			character_like_predicate_part_2.setKw_not( "not" );
+		}
+		if ( condition.getLikeEscapeOperand( ) != null )
+		{
+			escape_character_clause escape_character_clause = new escape_character_clause( );
+			character_like_predicate_part_2.setEscape_character_clause( escape_character_clause );
+			convertExpressionToCharacterValueExpression( condition.getLikeEscapeOperand( ),
+					escape_character_clause.getEscape_character( )
+							.getCharacter_value_expression( ) );
+		}
+
+		convertExpressionToCharacterValueExpression( condition.getRightOperand( ),
+				character_like_predicate_part_2.getCharacter_pattern( )
+						.getCharacter_value_expression( ) );
 	}
 
 	private void convertExpressionToExistsPredicate( TExpression expression,
