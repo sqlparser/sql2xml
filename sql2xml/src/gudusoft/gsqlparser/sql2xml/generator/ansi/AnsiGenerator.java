@@ -2304,6 +2304,45 @@ public class AnsiGenerator implements SQL2XMLGenerator
 	{
 		switch ( typename.getDataType( ) )
 		{
+			case float_t :
+			{
+				predefined_type type = createPredefinedType( data_type );
+				numeric_type numeric_type = new numeric_type( );
+				type.setNumeric_type( numeric_type );
+				approximate_numeric_type approximate_numeric_type = new approximate_numeric_type( );
+				numeric_type.setApproximate_numeric_type( approximate_numeric_type );
+				float_with_precision float_with_precision = new float_with_precision( );
+				approximate_numeric_type.setFloat_with_precision( float_with_precision );
+				if ( typename.getLength( ) != null )
+				{
+					precision precision = new precision( );
+					precision.setUnsigned_integer( typename.getLength( )
+							.toString( ) );
+					float_with_precision.setPrecision( precision );
+				}
+			}
+				break;
+			case real_t :
+			{
+				predefined_type type = createPredefinedType( data_type );
+				numeric_type numeric_type = new numeric_type( );
+				type.setNumeric_type( numeric_type );
+				approximate_numeric_type approximate_numeric_type = new approximate_numeric_type( );
+				numeric_type.setApproximate_numeric_type( approximate_numeric_type );
+				approximate_numeric_type.setKw_real( "real" );
+			}
+				break;
+			case double_t :
+			case double_precision_t :
+			{
+				predefined_type type = createPredefinedType( data_type );
+				numeric_type numeric_type = new numeric_type( );
+				type.setNumeric_type( numeric_type );
+				approximate_numeric_type approximate_numeric_type = new approximate_numeric_type( );
+				numeric_type.setApproximate_numeric_type( approximate_numeric_type );
+				approximate_numeric_type.setKw_double_precision( "double precision" );
+			}
+				break;
 			case dec_t :
 			{
 				predefined_type type = createPredefinedType( data_type );
