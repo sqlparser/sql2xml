@@ -819,6 +819,16 @@ public class AnsiGenerator implements SQL2XMLGenerator
 				convertExpressionToExistsPredicate( condition, existsPredicate );
 			}
 				break;
+			case parenthesis_t :
+			{
+				boolean_predicand boolean_predicand = new boolean_predicand( );
+				boolean_primary.setBoolean_predicand( boolean_predicand );
+				parenthesized_boolean_value_expression parenthesized_boolean_value_expression = new parenthesized_boolean_value_expression( );
+				boolean_predicand.setParenthesized_boolean_value_expression( parenthesized_boolean_value_expression );
+				convertBooleanExpressionToModel( condition.getLeftOperand( ),
+						parenthesized_boolean_value_expression.getBoolean_value_expression( ) );
+			}
+				break;
 		}
 
 	}
