@@ -973,51 +973,6 @@ public class AnsiGenerator implements SQL2XMLGenerator
 				value_expression_primary );
 	}
 
-	private void convertExpressionToMemberPredicate( TExpression condition,
-			member_predicate memberPredicate )
-	{
-		convertExpressionToRowValuePredicand( condition.getLeftOperand( ),
-				memberPredicate.getRow_value_predicand( ) );
-		convertExpressionToMemberPredicatePart2( condition,
-				memberPredicate.getMember_predicate_part_2( ) );
-
-	}
-
-	private void convertExpressionToMemberPredicatePart2(
-			TExpression condition,
-			member_predicate_part_2 member_predicate_part_2 )
-	{
-		if ( condition.getNotToken( ) != null )
-		{
-			member_predicate_part_2.setKw_not( "not" );
-		}
-
-		if ( SourceTokenSearcher.indexOf( condition.getStartToken( ).container,
-				condition.getStartToken( ).posinlist,
-				condition.getEndToken( ).posinlist,
-				"OF" ) != -1 )
-		{
-			member_predicate_part_2.setKw_of( "of" );
-		}
-
-		convertExpressionToMultisetValueExpression( condition.getRightOperand( ),
-				member_predicate_part_2.getMultiset_value_expression( ) );
-	}
-
-	private void convertExpressionToMultisetValueExpression(
-			TExpression expression,
-			multiset_value_expression multiset_value_expression )
-	{
-		multiset_term multiset_term = new multiset_term( );
-		multiset_value_expression.setMultiset_term( multiset_term );
-		multiset_primary multiset_primary = new multiset_primary( );
-		multiset_term.setMultiset_primary( multiset_primary );
-		value_expression_primary value_expression_primary = new value_expression_primary( );
-		multiset_primary.setValue_expression_primary( value_expression_primary );
-		convertExpressionToValueExpressionPrimary( expression,
-				value_expression_primary );
-	}
-
 	private void convertExpressionToLikePredicate( TExpression condition,
 			like_predicate likePredicate )
 	{
