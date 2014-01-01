@@ -3411,7 +3411,7 @@
 					<xs:sequence>
 						<xs:element ref="kw_national"/>
 						<xs:element ref="kw_character"/>
-						<xs:element ref="large_object_length" minOccurs="0"/>
+						<xs:element ref="length" minOccurs="0"/>
 					</xs:sequence>
 				</xs:complexType>
 			</xs:element>
@@ -3420,7 +3420,7 @@
 					<xs:sequence>
 						<xs:element ref="kw_national" />
 						<xs:element ref="kw_char" />
-						<xs:element ref="large_object_length" minOccurs="0"/>
+						<xs:element ref="length" minOccurs="0"/>
 					</xs:sequence>
 				</xs:complexType>
 			</xs:element>
@@ -3428,7 +3428,7 @@
 				<xs:complexType>
 					<xs:sequence>
 						<xs:element ref="kw_nchar"/>
-						<xs:element ref="large_object_length" minOccurs="0"/>
+						<xs:element ref="length" minOccurs="0"/>
 					</xs:sequence>
 				</xs:complexType>
 			</xs:element>
@@ -3438,7 +3438,7 @@
 						<xs:element ref="kw_national" />
 						<xs:element ref="kw_character" />
 						<xs:element ref="kw_varying" />
-						<xs:element ref="large_object_length" minOccurs="0"/>
+						<xs:element ref="length" minOccurs="0"/>
 					</xs:sequence>
 				</xs:complexType>
 			</xs:element>
@@ -3448,7 +3448,7 @@
 						<xs:element ref="kw_national" />
 						<xs:element ref="kw_char" />
 						<xs:element ref="kw_varying" />
-						<xs:element ref="large_object_length" minOccurs="0"/>
+						<xs:element ref="length" minOccurs="0"/>
 					</xs:sequence>
 				</xs:complexType>
 			</xs:element>
@@ -3457,7 +3457,7 @@
 					<xs:sequence>
 						<xs:element ref="kw_nchar" />
 						<xs:element ref="kw_varying" />
-						<xs:element ref="large_object_length" minOccurs="0"/>
+						<xs:element ref="length" minOccurs="0"/>
 					</xs:sequence>
 				</xs:complexType>
 			</xs:element>

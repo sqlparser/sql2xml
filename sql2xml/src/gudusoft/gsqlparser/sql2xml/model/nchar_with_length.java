@@ -10,21 +10,16 @@ public class nchar_with_length
 	private String kw_nchar = "nchar";
 
 	@Element(required = false)
-	private large_object_length large_object_length;
+	private length length;
 
-	public large_object_length getLarge_object_length( )
+	public length getLength( )
 	{
-		return large_object_length;
+		return length;
 	}
 
-	public void setLarge_object_length( large_object_length large_object_length )
+	public void setLength( length length )
 	{
-		this.large_object_length = large_object_length;
-	}
-
-	public String getKw_nchar( )
-	{
-		return kw_nchar;
+		this.length = length;
 	}
 
 }

@@ -13,15 +13,15 @@ public class national_char_with_length
 	private String kw_char = "char";
 
 	@Element(required = false)
-	private large_object_length large_object_length;
+	private length length;
 
-	public large_object_length getLarge_object_length( )
+	public length getLength( )
 	{
-		return large_object_length;
+		return length;
 	}
 
-	public void setLarge_object_length( large_object_length large_object_length )
+	public void setLength( length length )
 	{
-		this.large_object_length = large_object_length;
+		this.length = length;
 	}
 }
