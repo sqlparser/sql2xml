@@ -3797,7 +3797,7 @@
 				<xs:complexType>
 					<xs:sequence>
 						<xs:element ref="kw_timestamp"/>
-						<xs:element ref="time_precision" minOccurs="0"/>
+						<xs:element ref="timestamp_precision" minOccurs="0"/>
 						<xs:element ref="with_or_without_time_zone" minOccurs="0"/>
 					</xs:sequence>
 				</xs:complexType>

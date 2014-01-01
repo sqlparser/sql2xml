@@ -2305,6 +2305,48 @@ public class AnsiGenerator implements SQL2XMLGenerator
 
 		switch ( typename.getDataType( ) )
 		{
+			case date_t :
+			{
+				predefined_type type = createPredefinedType( data_type );
+				datetime_type datetime_type = new datetime_type( );
+				type.setDatetime_type( datetime_type );
+				datetime_type.setKw_date( "date" );
+			}
+				break;
+			case time_t :
+			{
+				predefined_type type = createPredefinedType( data_type );
+				datetime_type datetime_type = new datetime_type( );
+				type.setDatetime_type( datetime_type );
+				time_precison_zone time_precison_zone = new time_precison_zone( );
+				datetime_type.setTime_precison_zone( time_precison_zone );
+			}
+				break;
+			case timestamp_t :
+			{
+				predefined_type type = createPredefinedType( data_type );
+				datetime_type datetime_type = new datetime_type( );
+				type.setDatetime_type( datetime_type );
+				timestamp_precision_zone timestamp_precision_zone = new timestamp_precision_zone( );
+				datetime_type.setTimestamp_precision_zone( timestamp_precision_zone );
+				if ( typename.getLength( ) != null )
+				{
+					timestamp_precision timestamp_precision = new timestamp_precision( );
+					timestamp_precision_zone.setTimestamp_precision( timestamp_precision );
+					timestamp_precision.getTime_fractional_seconds_precision( )
+							.setUnsigned_integer( typename.getLength( )
+									.toString( ) );
+				}
+
+			}
+				break;
+			case boolean_t :
+			{
+				predefined_type type = createPredefinedType( data_type );
+				boolean_type boolean_type = new boolean_type( );
+				type.setBoolean_type( boolean_type );
+			}
+				break;
 			case float_t :
 			{
 				predefined_type type = createPredefinedType( data_type );
@@ -2522,6 +2564,14 @@ public class AnsiGenerator implements SQL2XMLGenerator
 				type.setDatetime_type( datetime_type );
 				timestamp_precision_zone timestamp_precision_zone = new timestamp_precision_zone( );
 				datetime_type.setTimestamp_precision_zone( timestamp_precision_zone );
+				if ( typename.getLength( ) != null )
+				{
+					timestamp_precision timestamp_precision = new timestamp_precision( );
+					timestamp_precision_zone.setTimestamp_precision( timestamp_precision );
+					timestamp_precision.getTime_fractional_seconds_precision( )
+							.setUnsigned_integer( typename.getLength( )
+									.toString( ) );
+				}
 				with_or_without_time_zone with_or_without_time_zone = new with_or_without_time_zone( );
 				timestamp_precision_zone.setWith_or_without_time_zone( with_or_without_time_zone );
 				with_or_without_time_zone.setWith_time_zone( new with_time_zone( ) );

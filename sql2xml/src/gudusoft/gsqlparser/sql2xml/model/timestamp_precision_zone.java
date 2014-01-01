@@ -10,19 +10,21 @@ public class timestamp_precision_zone
 	private String kw_timestamp = "timestamp";
 
 	@Element(required = false)
-	private time_precision time_precision;
+	private timestamp_precision timestamp_precision;
 
 	@Element(required = false)
 	private with_or_without_time_zone with_or_without_time_zone;
 
-	public time_precision getTime_precision( )
+	
+	public timestamp_precision getTimestamp_precision( )
 	{
-		return time_precision;
+		return timestamp_precision;
 	}
 
-	public void setTime_precision( time_precision time_precision )
+	
+	public void setTimestamp_precision( timestamp_precision timestamp_precision )
 	{
-		this.time_precision = time_precision;
+		this.timestamp_precision = timestamp_precision;
 	}
 
 	public with_or_without_time_zone getWith_or_without_time_zone( )
