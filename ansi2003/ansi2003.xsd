@@ -11059,7 +11059,7 @@
 		<xs:sequence>
 			<xs:element ref="constraint_name_definition" minOccurs="0"/>
 			<xs:element ref="table_constraint"/>
-			<xs:element ref="constraint_characteristics"/>
+			<xs:element ref="constraint_characteristics" minOccurs="0"/>
 		</xs:sequence>
 	</xs:complexType>
 </xs:element>	

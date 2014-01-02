@@ -2,6 +2,7 @@
 package gudusoft.gsqlparser.sql2xml.generator.ansi;
 
 import gudusoft.gsqlparser.EAggregateType;
+import gudusoft.gsqlparser.EConstraintType;
 import gudusoft.gsqlparser.EDbVendor;
 import gudusoft.gsqlparser.EExpressionType;
 import gudusoft.gsqlparser.EJoinType;
@@ -16,6 +17,8 @@ import gudusoft.gsqlparser.nodes.TCTEList;
 import gudusoft.gsqlparser.nodes.TCaseExpression;
 import gudusoft.gsqlparser.nodes.TColumnDefinition;
 import gudusoft.gsqlparser.nodes.TColumnDefinitionList;
+import gudusoft.gsqlparser.nodes.TConstraint;
+import gudusoft.gsqlparser.nodes.TConstraintList;
 import gudusoft.gsqlparser.nodes.TExpression;
 import gudusoft.gsqlparser.nodes.TExpressionList;
 import gudusoft.gsqlparser.nodes.TForUpdate;
@@ -216,12 +219,15 @@ public class AnsiGenerator implements SQL2XMLGenerator
 		convertTableNameToModel( createTable.getTableName( ),
 				table_definition.getTable_name( ) );
 
-		if ( createTable.getColumnList( ) != null )
+		if ( createTable.getColumnList( ) != null
+				|| createTable.getTableConstraints( ) != null )
 		{
 			table_element_list table_element_list = new table_element_list( );
 			table_definition.getTable_contents_source( )
 					.setTable_element_list( table_element_list );
 			convertTableColumnListToTableElementList( createTable.getColumnList( ),
+					table_element_list );
+			convertTableConstraintListToTableElementList( createTable.getTableConstraints( ),
 					table_element_list );
 		}
 	}
@@ -237,6 +243,49 @@ public class AnsiGenerator implements SQL2XMLGenerator
 			table_element element = new table_element( );
 			table_elements.add( element );
 			convertColumnDefinitionToTableElement( columnDef, element );
+		}
+	}
+
+	private void convertTableConstraintListToTableElementList(
+			TConstraintList constraintList,
+			table_element_list table_element_list )
+	{
+		List<table_element> table_elements = table_element_list.getTable_element( );
+		for ( int i = 0; i < constraintList.size( ); i++ )
+		{
+			TConstraint constraint = constraintList.getConstraint( i );
+			table_element element = new table_element( );
+			table_elements.add( element );
+			convertTableConstraintToTableElement( constraint, element );
+		}
+	}
+
+	private void convertTableConstraintToTableElement( TConstraint constraint,
+			table_element element )
+	{
+		table_constraint_definition table_constraint_definition = new table_constraint_definition( );
+		element.setTable_constraint_definition( table_constraint_definition );
+
+		if ( constraint.getConstraint_type( ) == EConstraintType.unique )
+		{
+			unique_constraint_definition unique_constraint_definition = new unique_constraint_definition( );
+			table_constraint_definition.getTable_constraint( )
+					.setUnique_constraint_definition( unique_constraint_definition );
+
+			if ( constraint.getColumnList( ) != null )
+			{
+				unique_specification_column_list unique_specification_column_list = new unique_specification_column_list( );
+				unique_constraint_definition.setUnique_specification_column_list( unique_specification_column_list );
+				unique_specification_column_list.getUnique_specification( )
+						.setKw_unique( "unique" );
+				convertColumnNameListToModel( constraint.getColumnList( ),
+						unique_specification_column_list.getUnique_column_list( )
+								.getColumn_name_list( ) );
+			}
+			else
+			{
+				unique_constraint_definition.setUnique_value( new unique_value( ) );
+			}
 		}
 	}
 
@@ -1584,18 +1633,25 @@ public class AnsiGenerator implements SQL2XMLGenerator
 			column_name_list columnNameList = new column_name_list( );
 			ofColumnNameList.setColumn_name_list( columnNameList );
 
-			List<column_name> columnNames = columnNameList.getColumn_name( );
+			TObjectNameList objectNameList = forUpdate.getColumnRefs( );
 
-			for ( int i = 0; i < forUpdate.getColumnRefs( ).size( ); i++ )
-			{
-				TObjectName column = forUpdate.getColumnRefs( )
-						.getObjectName( i );
+			convertColumnNameListToModel( objectNameList, columnNameList );
+		}
+	}
 
-				column_name columnName = new column_name( );
-				columnNames.add( columnName );
-				identifier identifier = columnName.getIdentifier( );
-				convertObjectName2Model( column, identifier );
-			}
+	private void convertColumnNameListToModel( TObjectNameList objectNameList,
+			column_name_list columnNameList )
+	{
+		List<column_name> columnNames = columnNameList.getColumn_name( );
+
+		for ( int i = 0; i < objectNameList.size( ); i++ )
+		{
+			TObjectName column = objectNameList.getObjectName( i );
+
+			column_name columnName = new column_name( );
+			columnNames.add( columnName );
+			identifier identifier = columnName.getIdentifier( );
+			convertObjectName2Model( column, identifier );
 		}
 	}
 
