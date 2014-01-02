@@ -10875,19 +10875,19 @@
 		<xs:choice>
 			<xs:element name="without_data">
 				<xs:complexType>
-					<xs:choice>
+					<xs:sequence>
 						<xs:element ref="kw_with"/>
 						<xs:element ref="kw_no"/>
 						<xs:element ref="kw_data"/>
-					</xs:choice>
+					</xs:sequence>
 				</xs:complexType>
 			</xs:element>
 			<xs:element name="with_data">
 				<xs:complexType>
-					<xs:choice>
+					<xs:sequence>
 						<xs:element ref="kw_with"/>
 						<xs:element ref="kw_data"/>
-					</xs:choice>
+					</xs:sequence>
 				</xs:complexType>
 			</xs:element>
 		</xs:choice>

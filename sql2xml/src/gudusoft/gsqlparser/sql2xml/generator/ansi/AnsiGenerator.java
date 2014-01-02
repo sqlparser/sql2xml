@@ -219,8 +219,10 @@ public class AnsiGenerator implements SQL2XMLGenerator
 		convertTableNameToModel( createTable.getTableName( ),
 				table_definition.getTable_name( ) );
 
-		if ( createTable.getColumnList( ) != null
-				|| createTable.getTableConstraints( ) != null )
+		if ( ( createTable.getColumnList( ) != null && createTable.getColumnList( )
+				.size( ) > 0 )
+				|| ( createTable.getTableConstraints( ) != null && createTable.getTableConstraints( )
+						.size( ) > 0 ) )
 		{
 			table_element_list table_element_list = new table_element_list( );
 			table_definition.getTable_contents_source( )
@@ -229,6 +231,17 @@ public class AnsiGenerator implements SQL2XMLGenerator
 					table_element_list );
 			convertTableConstraintListToTableElementList( createTable.getTableConstraints( ),
 					table_element_list );
+		}
+		else if ( createTable.getSubQuery( ) != null )
+		{
+			as_subquery_clause as_subquery_clause = new as_subquery_clause( );
+			table_definition.getTable_contents_source( )
+					.setAs_subquery_clause( as_subquery_clause );
+			convertSelectToQueryExpression( createTable.getSubQuery( ),
+					as_subquery_clause.getSubquery( ).getQuery_expression( ) );
+			as_subquery_clause.getWith_or_without_data( )
+					.setWith_data( new with_data( ) );
+
 		}
 	}
 
