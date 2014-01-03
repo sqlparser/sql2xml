@@ -2427,6 +2427,11 @@ public class AnsiGenerator implements SQL2XMLGenerator
 
 		switch ( typename.getDataType( ) )
 		{
+			case binary_t :
+			{
+
+			}
+				break;
 			case date_t :
 			{
 				predefined_type type = createPredefinedType( data_type );
@@ -2776,6 +2781,17 @@ public class AnsiGenerator implements SQL2XMLGenerator
 				national_character_string_type.setNational_character_large_object_type( national_character_large_object_type );
 				nclob_with_length nclob_with_length = new nclob_with_length( );
 				national_character_large_object_type.setNclob_with_length( nclob_with_length );
+			}
+				break;
+			case blob_t :
+			{
+				predefined_type type = createPredefinedType( data_type );
+				binary_string_type binary_string_type = new binary_string_type( );
+				type.setBinary_string_type( binary_string_type );
+				binary_large_object_string_type binary_large_object_string_type = new binary_large_object_string_type( );
+				binary_string_type.setBinary_large_object_string_type( binary_large_object_string_type );
+				blob_with_length blob_with_length = new blob_with_length( );
+				binary_large_object_string_type.setBlob_with_length( blob_with_length );
 			}
 				break;
 			case timestamp_with_time_zone_t :
