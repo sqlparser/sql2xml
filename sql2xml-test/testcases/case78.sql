@@ -1,0 +1,1 @@
+update t1 set f1=1 where f2 > 0;

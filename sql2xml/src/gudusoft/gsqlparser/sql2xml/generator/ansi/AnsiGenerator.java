@@ -4058,7 +4058,77 @@ public class AnsiGenerator implements SQL2XMLGenerator
 	private void convertUpdateStmt2Model( TUpdateSqlStatement update,
 			update_statement_searched updateStatementSearched )
 	{
-		// TODO Auto-generated method stub
+		TTable table = update.getTargetTable( );
+		if ( SourceTokenSearcher.indexOf( update.sourcetokenlist,
+				update.getStartToken( ).posinlist,
+				table.getStartToken( ).posinlist,
+				"ONLY" ) != -1 )
+		{
+			only_table_name only_table_name = new only_table_name( );
+			updateStatementSearched.getTarget_table( )
+					.setOnly_table_name( only_table_name );
+			convertTableNameToModel( table.getTableName( ),
+					only_table_name.getTable_name( ) );
+		}
+		else
+		{
+			table_name table_name = new table_name( );
+			updateStatementSearched.getTarget_table( )
+					.setTable_name( table_name );
+			convertTableNameToModel( table.getTableName( ), table_name );
+		}
+		if ( table.getAliasClause( ) != null )
+		{
+			as_correlation_name as_correlation_name = new as_correlation_name( );
+			updateStatementSearched.setAs_correlation_name( as_correlation_name );
+			if ( table.getAliasClause( ).getAsToken( ) != null )
+			{
+				as_correlation_name.setKw_as( "as" );
+			}
+			convertObjectName2Model( table.getAliasClause( ).getAliasName( ),
+					as_correlation_name.getCorrelation_name( ).getIdentifier( ) );
+		}
+		if ( update.getWhereClause( ) != null )
+		{
+			where_search_condition where_search_condition = new where_search_condition( );
+			updateStatementSearched.setWhere_search_condition( where_search_condition );
+			convertBooleanExpressionToModel( update.getWhereClause( )
+					.getCondition( ),
+					where_search_condition.getSearch_condition( )
+							.getBoolean_value_expression( ) );
+		}
+
+		List<set_clause> set_clauses = updateStatementSearched.getSet_clause_list( )
+				.getSet_clause( );
+
+		for ( int i = 0; i < update.getResultColumnList( ).size( ); i++ )
+		{
+			set_clause set_clause = new set_clause( );
+			set_clauses.add( set_clause );
+
+			set_target_equals_update_source set_target_equals_update_source = new set_target_equals_update_source( );
+			set_clause.setSet_target_equals_update_source( set_target_equals_update_source );
+
+			TResultColumn column = update.getResultColumnList( )
+					.getResultColumn( i );
+			TExpression expr = column.getExpr( );
+
+			update_target update_target = new update_target( );
+			set_target_equals_update_source.getSet_target( )
+					.setUpdate_target( update_target );
+
+			object_column object_column = new object_column( );
+			update_target.setObject_column( object_column );
+
+			convertObjectName2Model( expr.getLeftOperand( ).getObjectOperand( ),
+					object_column.getColumn_name( ).getIdentifier( ) );
+
+			value_expression value_expression = new value_expression( );
+			set_target_equals_update_source.getUpdate_source( )
+					.setValue_expression( value_expression );
+			convertExpressionToValueExpression( expr.getRightOperand( ),
+					value_expression );
+		}
 
 	}
 
