@@ -2427,6 +2427,17 @@ public class AnsiGenerator implements SQL2XMLGenerator
 
 		switch ( typename.getDataType( ) )
 		{
+			case interval_year_to_month_t :
+			{
+				predefined_type type = createPredefinedType( data_type );
+				interval_type interval_type = new interval_type( );
+				type.setInterval_type( interval_type );
+				interval_qualifier interval_qualifier = interval_type.getInterval_qualifier( );
+				convertStartToEndIntervalToModel( typename.toString( )
+						.replaceFirst( "(?i)interval", "" )
+						.trim( ), interval_qualifier );
+			}
+				break;
 			case binary_t :
 			{
 
@@ -3515,38 +3526,9 @@ public class AnsiGenerator implements SQL2XMLGenerator
 			}
 			else
 			{
-				start_to_end_field start_to_end_field = new start_to_end_field( );
-				intervalLiteral.getInterval_qualifier( )
-						.setStart_to_end_field( start_to_end_field );
+				interval_qualifier interval_qualifier = intervalLiteral.getInterval_qualifier( );
 
-				String[] fields = qualifier.trim( ).toUpperCase( ).split( "TO" );
-				convertDateTimeFieldToSingleDatetimeField1( fields[0].trim( ),
-						start_to_end_field.getStart_field( ) );
-
-				if ( fields[1].trim( ).indexOf( "SECOND" ) == -1 )
-				{
-					non_second_primary_datetime_field non_second_primary_datetime_field = new non_second_primary_datetime_field( );
-					start_to_end_field.getEnd_field( )
-							.setNon_second_primary_datetime_field( non_second_primary_datetime_field );
-					convertDateTimeFieldToNonSecondPrimaryDatetimeField( fields[1].trim( ),
-							start_to_end_field.getEnd_field( )
-									.getNon_second_primary_datetime_field( ) );
-				}
-				else
-				{
-					second_interval_fractional_seconds_precision second_interval_fractional_seconds_precision = new second_interval_fractional_seconds_precision( );
-					start_to_end_field.getEnd_field( )
-							.setSecond_interval_fractional_seconds_precision( second_interval_fractional_seconds_precision );
-					if ( qualifier.indexOf( "(" ) != -1
-							&& qualifier.indexOf( ")" ) != -1 )
-					{
-						interval_fractional_seconds_precision interval_fractional_seconds_precision = new interval_fractional_seconds_precision( );
-						second_interval_fractional_seconds_precision.setInterval_fractional_seconds_precision( interval_fractional_seconds_precision );
-						String precision = qualifier.substring( qualifier.indexOf( "(" ) + 1,
-								qualifier.lastIndexOf( ")" ) );
-						interval_fractional_seconds_precision.setUnsigned_integer( precision );
-					}
-				}
+				convertStartToEndIntervalToModel( qualifier, interval_qualifier );
 			}
 
 			year_month_or_day_time_literal yearMonthOrDayTimeLiteral = intervalLiteral.getInterval_string( )
@@ -3697,6 +3679,42 @@ public class AnsiGenerator implements SQL2XMLGenerator
 
 					}
 				}
+			}
+		}
+	}
+
+	private void convertStartToEndIntervalToModel( String qualifier,
+			interval_qualifier interval_qualifier )
+	{
+		start_to_end_field start_to_end_field = new start_to_end_field( );
+		interval_qualifier.setStart_to_end_field( start_to_end_field );
+
+		String[] fields = qualifier.trim( ).toUpperCase( ).split( "TO" );
+		convertDateTimeFieldToSingleDatetimeField1( fields[0].trim( ),
+				start_to_end_field.getStart_field( ) );
+
+		if ( fields[1].trim( ).indexOf( "SECOND" ) == -1 )
+		{
+			non_second_primary_datetime_field non_second_primary_datetime_field = new non_second_primary_datetime_field( );
+			start_to_end_field.getEnd_field( )
+					.setNon_second_primary_datetime_field( non_second_primary_datetime_field );
+			convertDateTimeFieldToNonSecondPrimaryDatetimeField( fields[1].trim( ),
+					start_to_end_field.getEnd_field( )
+							.getNon_second_primary_datetime_field( ) );
+		}
+		else
+		{
+			second_interval_fractional_seconds_precision second_interval_fractional_seconds_precision = new second_interval_fractional_seconds_precision( );
+			start_to_end_field.getEnd_field( )
+					.setSecond_interval_fractional_seconds_precision( second_interval_fractional_seconds_precision );
+			if ( qualifier.indexOf( "(" ) != -1
+					&& qualifier.indexOf( ")" ) != -1 )
+			{
+				interval_fractional_seconds_precision interval_fractional_seconds_precision = new interval_fractional_seconds_precision( );
+				second_interval_fractional_seconds_precision.setInterval_fractional_seconds_precision( interval_fractional_seconds_precision );
+				String precision = qualifier.substring( qualifier.indexOf( "(" ) + 1,
+						qualifier.lastIndexOf( ")" ) );
+				interval_fractional_seconds_precision.setUnsigned_integer( precision );
 			}
 		}
 	}
