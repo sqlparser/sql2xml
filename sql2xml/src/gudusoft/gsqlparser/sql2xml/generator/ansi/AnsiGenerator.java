@@ -3978,8 +3978,45 @@ public class AnsiGenerator implements SQL2XMLGenerator
 	private void convertDeleteStmt2Model( TDeleteSqlStatement delete,
 			delete_statement_searched deleteStatementSearched )
 	{
-		// TODO Auto-generated method stub
-
+		TTable table = delete.getTargetTable( );
+		if ( SourceTokenSearcher.indexOf( delete.sourcetokenlist,
+				delete.getStartToken( ).posinlist,
+				table.getStartToken( ).posinlist,
+				"ONLY" ) != -1 )
+		{
+			only_table_name only_table_name = new only_table_name( );
+			deleteStatementSearched.getTarget_table( )
+					.setOnly_table_name( only_table_name );
+			convertTableNameToModel( table.getTableName( ),
+					only_table_name.getTable_name( ) );
+		}
+		else
+		{
+			table_name table_name = new table_name( );
+			deleteStatementSearched.getTarget_table( )
+					.setTable_name( table_name );
+			convertTableNameToModel( table.getTableName( ), table_name );
+		}
+		if ( table.getAliasClause( ) != null )
+		{
+			as_correlation_name as_correlation_name = new as_correlation_name( );
+			deleteStatementSearched.setAs_correlation_name( as_correlation_name );
+			if ( table.getAliasClause( ).getAsToken( ) != null )
+			{
+				as_correlation_name.setKw_as( "as" );
+			}
+			convertObjectName2Model( table.getAliasClause( ).getAliasName( ),
+					as_correlation_name.getCorrelation_name( ).getIdentifier( ) );
+		}
+		if ( delete.getWhereClause( ) != null )
+		{
+			where_search_condition where_search_condition = new where_search_condition( );
+			deleteStatementSearched.setWhere_search_condition( where_search_condition );
+			convertBooleanExpressionToModel( delete.getWhereClause( )
+					.getCondition( ),
+					where_search_condition.getSearch_condition( )
+							.getBoolean_value_expression( ) );
+		}
 	}
 
 	private void convertMergeStmt2Model( TMergeSqlStatement merge,

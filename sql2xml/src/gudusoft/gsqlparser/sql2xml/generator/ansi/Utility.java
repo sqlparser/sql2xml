@@ -17,12 +17,27 @@ public class Utility
 
 	public static boolean isDirect_sql_data_statement( TCustomSqlStatement stmt )
 	{
+		if ( isSql_data_statement( stmt ) )
+			return false;
 		if ( stmt instanceof TSelectSqlStatement
 				|| stmt instanceof TInsertSqlStatement
 				|| stmt instanceof TUpdateSqlStatement
 				|| stmt instanceof TDeleteSqlStatement
 				|| stmt instanceof TMergeSqlStatement )
 			return true;
+		return false;
+	}
+
+	public static boolean isSql_data_statement( TCustomSqlStatement stmt )
+	{
+		if ( stmt instanceof TDeleteSqlStatement )
+		{
+			if ( stmt.getWhereClause( ) != null
+					&& stmt.getWhereClause( ).isCurerntOf( ) )
+			{
+				return true;
+			}
+		}
 		return false;
 	}
 
