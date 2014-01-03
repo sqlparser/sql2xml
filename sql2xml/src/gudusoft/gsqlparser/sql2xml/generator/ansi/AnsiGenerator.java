@@ -905,6 +905,16 @@ public class AnsiGenerator implements SQL2XMLGenerator
 	{
 		switch ( condition.getExpressionType( ) )
 		{
+			case group_comparison_t :
+			{
+				predicate predicate = new predicate( );
+				boolean_primary.setPredicate( predicate );
+				quantified_comparison_predicate quantified_comparison_predicate = new quantified_comparison_predicate( );
+				predicate.setQuantified_comparison_predicate( quantified_comparison_predicate );
+				convertComparisonExpressionToQuantifiedComparisonPredicate( condition,
+						quantified_comparison_predicate );
+			}
+				break;
 			case simple_comparison_t :
 			{
 				predicate predicate = new predicate( );
@@ -988,6 +998,49 @@ public class AnsiGenerator implements SQL2XMLGenerator
 				break;
 		}
 
+	}
+
+	private void convertComparisonExpressionToQuantifiedComparisonPredicate(
+			TExpression condition,
+			quantified_comparison_predicate quantified_comparison_predicate )
+	{
+		convertExpressionToRowValuePredicand( condition.getLeftOperand( ),
+				quantified_comparison_predicate.getRow_value_predicand( ) );
+
+		convertExpressionOperationToCompOp( condition.getComparisonOperator( ),
+				quantified_comparison_predicate.getQuantified_comparison_predicate_part_2( )
+						.getComp_op( ) );
+		convertExpressionQuantifierToQuantifier( condition.getQuantifier( ),
+				quantified_comparison_predicate.getQuantified_comparison_predicate_part_2( )
+						.getQuantifier( ) );
+		convertSelectToQueryExpression( condition.getRightOperand( )
+				.getSubQuery( ),
+				quantified_comparison_predicate.getQuantified_comparison_predicate_part_2( )
+						.getTable_subquery( )
+						.getSubquery( )
+						.getQuery_expression( ) );
+
+	}
+
+	private void convertExpressionQuantifierToQuantifier(
+			TSourceToken quantifierToken, quantifier quantifier )
+	{
+		if ( quantifierToken.toString( ).equalsIgnoreCase( "ALL" ) )
+		{
+			quantifier.setKw_all( "all" );
+		}
+		else if ( quantifierToken.toString( ).equalsIgnoreCase( "SOME" ) )
+		{
+			some some = new some( );
+			quantifier.setSome( some );
+			some.setKw_some( "some" );
+		}
+		else if ( quantifierToken.toString( ).equalsIgnoreCase( "ANY" ) )
+		{
+			some some = new some( );
+			quantifier.setSome( some );
+			some.setKw_any( "any" );
+		}
 	}
 
 	private void convertExpressionToMemberPredicate( TExpression condition,
