@@ -6,6 +6,7 @@ import gudusoft.gsqlparser.EConstraintType;
 import gudusoft.gsqlparser.EDbVendor;
 import gudusoft.gsqlparser.EExpressionType;
 import gudusoft.gsqlparser.EJoinType;
+import gudusoft.gsqlparser.ETokenType;
 import gudusoft.gsqlparser.TBaseType;
 import gudusoft.gsqlparser.TCustomSqlStatement;
 import gudusoft.gsqlparser.TGSqlParser;
@@ -28,6 +29,7 @@ import gudusoft.gsqlparser.nodes.TGroupByItem;
 import gudusoft.gsqlparser.nodes.TJoin;
 import gudusoft.gsqlparser.nodes.TJoinItem;
 import gudusoft.gsqlparser.nodes.TJoinItemList;
+import gudusoft.gsqlparser.nodes.TMultiTarget;
 import gudusoft.gsqlparser.nodes.TObjectName;
 import gudusoft.gsqlparser.nodes.TObjectNameList;
 import gudusoft.gsqlparser.nodes.TOrderBy;
@@ -4069,6 +4071,50 @@ public class AnsiGenerator implements SQL2XMLGenerator
 			}
 			convertSelectToQueryExpression( insert.getSubQuery( ),
 					from_subquery.getQuery_expression( ) );
+		}
+		else if ( insert.getValues( ) != null )
+		{
+			from_constructor from_constructor = new from_constructor( );
+			insert_columns_and_source.setFrom_constructor( from_constructor );
+			if ( insert.getColumnList( ) != null )
+			{
+				insert_column_list insert_column_list = new insert_column_list( );
+				from_constructor.setInsert_column_list( insert_column_list );
+				convertColumnNameListToModel( insert.getColumnList( ),
+						insert_column_list.getColumn_name_list( ) );
+			}
+
+			List<contextually_typed_row_value_expression> contextually_typed_row_value_expressions = from_constructor.getContextually_typed_table_value_constructor( )
+					.getContextually_typed_row_value_expression_list( )
+					.getContextually_typed_row_value_expression( );
+
+			for ( int i = 0; i < insert.getValues( ).size( ); i++ )
+			{
+				TMultiTarget target = insert.getValues( ).getMultiTarget( i );
+				contextually_typed_row_value_expression contextually_typed_row_value_expression = new contextually_typed_row_value_expression( );
+				contextually_typed_row_value_expressions.add( contextually_typed_row_value_expression );
+				if ( target.getStartToken( ).tokentype == ETokenType.ttleftparenthesis
+						&& target.getEndToken( ).tokentype == ETokenType.ttrightparenthesis )
+				{
+					contextually_typed_row_value_constructor contextually_typed_row_value_constructor = new contextually_typed_row_value_constructor( );
+					contextually_typed_row_value_expression.setContextually_typed_row_value_constructor( contextually_typed_row_value_constructor );
+					contextually_typed_row_value_constructor_with_paren contextually_typed_row_value_constructor_with_paren = new contextually_typed_row_value_constructor_with_paren( );
+					contextually_typed_row_value_constructor.setContextually_typed_row_value_constructor_with_paren( contextually_typed_row_value_constructor_with_paren );
+
+					List<contextually_typed_row_value_constructor> contextually_typed_row_value_constructors = contextually_typed_row_value_constructor_with_paren.getContextually_typed_row_value_constructor( );
+					for ( int j = 0; j < target.getColumnList( ).size( ); j++ )
+					{
+						TResultColumn column = target.getColumnList( )
+								.getResultColumn( j );
+						contextually_typed_row_value_constructor row_value_constructor = new contextually_typed_row_value_constructor( );
+						contextually_typed_row_value_constructors.add( row_value_constructor );
+						common_value_expression common_value_expression = new common_value_expression( );
+						row_value_constructor.setCommon_value_expression( common_value_expression );
+						convertExpressionToCommonValueExpression( column.getExpr( ),
+								common_value_expression );
+					}
+				}
+			}
 		}
 	}
 
