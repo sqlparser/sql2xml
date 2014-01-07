@@ -305,6 +305,18 @@ public class AnsiGenerator implements SQL2XMLGenerator
 				unique_constraint_definition.setUnique_value( new unique_value( ) );
 			}
 		}
+		else if ( constraint.getConstraint_type( ) == EConstraintType.check )
+		{
+			check_constraint_definition check_constraint_definition = new check_constraint_definition( );
+			table_constraint_definition.getTable_constraint( )
+					.setCheck_constraint_definition( check_constraint_definition );
+			if ( constraint.getCheckCondition( ) != null )
+			{
+				convertBooleanExpressionToModel( constraint.getCheckCondition( ),
+						check_constraint_definition.getSearch_condition( )
+								.getBoolean_value_expression( ) );
+			}
+		}
 		else if ( constraint.getConstraint_type( ) == EConstraintType.foreign_key )
 		{
 
