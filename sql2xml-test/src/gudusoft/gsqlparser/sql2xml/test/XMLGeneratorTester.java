@@ -26,16 +26,26 @@ public class XMLGeneratorTester extends TestCase
 
 	protected void setUp( ) throws Exception
 	{
-		File testBaseDir = new File( "./testcases" );
-		File[] testcases = testBaseDir.listFiles( );
 		SQL2XMLGenerator generator = SQL2XMLGeneratorFactory.getGenerator( EDbVendor.dbvansi );
+
+		File testBaseDir = new File( "./testcases/mssql" );
+		generateXMLs( generator, testBaseDir, EDbVendor.dbvmssql );
+
+		testBaseDir = new File( "./testcases/oracle" );
+		generateXMLs( generator, testBaseDir, EDbVendor.dbvoracle );
+	}
+
+	private void generateXMLs( SQL2XMLGenerator generator, File testBaseDir,
+			EDbVendor vendor )
+	{
+		File[] testcases = testBaseDir.listFiles( );
 		for ( int i = 0; i < testcases.length; i++ )
 		{
 			File testcase = testcases[i];
 			String caseName = testcase.getName( );
 			if ( caseName.toLowerCase( ).endsWith( ".sql" ) )
 			{
-				String result = generator.generateXML( EDbVendor.dbvoracle, testcase );
+				String result = generator.generateXML( vendor, testcase );
 				if ( result == null )
 				{
 					System.err.println( generator.getErrorMessage( ) );
@@ -63,7 +73,15 @@ public class XMLGeneratorTester extends TestCase
 
 	public void testValidation( )
 	{
-		File testBaseDir = new File( "./testcases" );
+		File testBaseDir = new File( "./testcases/oracle" );
+		validate( testBaseDir );
+
+		testBaseDir = new File( "./testcases/mssql" );
+		validate( testBaseDir );
+	}
+
+	private void validate( File testBaseDir )
+	{
 		File[] testcases = testBaseDir.listFiles( );
 		for ( int i = 0; i < testcases.length; i++ )
 		{

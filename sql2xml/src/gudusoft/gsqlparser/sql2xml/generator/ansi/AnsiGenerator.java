@@ -4116,6 +4116,11 @@ public class AnsiGenerator implements SQL2XMLGenerator
 				}
 			}
 		}
+		else if(insert.toString( ).trim( ).matches( "(?i).+(default\\s+values).*" ))
+		{
+			from_default from_default = new from_default( );
+			insert_columns_and_source.setFrom_default( from_default );
+		}
 	}
 
 	private void convertUpdateStmt2Model( TUpdateSqlStatement update,
