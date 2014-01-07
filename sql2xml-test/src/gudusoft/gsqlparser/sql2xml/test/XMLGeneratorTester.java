@@ -28,11 +28,11 @@ public class XMLGeneratorTester extends TestCase
 	{
 		SQL2XMLGenerator generator = SQL2XMLGeneratorFactory.getGenerator( EDbVendor.dbvansi );
 
-		File testBaseDir = new File( "./testcases/mssql" );
-		generateXMLs( generator, testBaseDir, EDbVendor.dbvmssql );
-
-		testBaseDir = new File( "./testcases/oracle" );
+		File testBaseDir = new File( "./testcases/oracle" );
 		generateXMLs( generator, testBaseDir, EDbVendor.dbvoracle );
+
+		testBaseDir = new File( "./testcases/mssql" );
+		generateXMLs( generator, testBaseDir, EDbVendor.dbvmssql );
 	}
 
 	private void generateXMLs( SQL2XMLGenerator generator, File testBaseDir,

@@ -6,6 +6,7 @@ import gudusoft.gsqlparser.EConstraintType;
 import gudusoft.gsqlparser.EDbVendor;
 import gudusoft.gsqlparser.EExpressionType;
 import gudusoft.gsqlparser.EJoinType;
+import gudusoft.gsqlparser.EKeyActionType;
 import gudusoft.gsqlparser.ETokenType;
 import gudusoft.gsqlparser.TBaseType;
 import gudusoft.gsqlparser.TCustomSqlStatement;
@@ -29,6 +30,8 @@ import gudusoft.gsqlparser.nodes.TGroupByItem;
 import gudusoft.gsqlparser.nodes.TJoin;
 import gudusoft.gsqlparser.nodes.TJoinItem;
 import gudusoft.gsqlparser.nodes.TJoinItemList;
+import gudusoft.gsqlparser.nodes.TKeyAction;
+import gudusoft.gsqlparser.nodes.TKeyReference;
 import gudusoft.gsqlparser.nodes.TMultiTarget;
 import gudusoft.gsqlparser.nodes.TObjectName;
 import gudusoft.gsqlparser.nodes.TObjectNameList;
@@ -302,6 +305,150 @@ public class AnsiGenerator implements SQL2XMLGenerator
 				unique_constraint_definition.setUnique_value( new unique_value( ) );
 			}
 		}
+		else if ( constraint.getConstraint_type( ) == EConstraintType.foreign_key )
+		{
+
+			if ( constraint.getConstraintName( ) != null )
+			{
+				constraint_name_definition constraint_name_definition = new constraint_name_definition( );
+				table_constraint_definition.setConstraint_name_definition( constraint_name_definition );
+
+				schema_qualified_name schema_qualified_name = constraint_name_definition.getConstraint_name( )
+						.getSchema_qualified_name( );
+
+				if ( constraint.getConstraintName( ).getSchemaString( ) != null )
+				{
+					schema_name schemaName = new schema_name( );
+					schema_qualified_name.setSchema_name( schemaName );
+					convertSchemaToModel( constraint.getConstraintName( ),
+							schemaName );
+				}
+				convertIdentifierToModel( constraint.getConstraintName( )
+						.getObjectString( ),
+						schema_qualified_name.getQualified_identifier( )
+								.getIdentifier( )
+								.getActual_identifier( ) );
+			}
+
+			referential_constraint_definition referential_constraint_definition = new referential_constraint_definition( );
+			table_constraint_definition.getTable_constraint( )
+					.setReferential_constraint_definition( referential_constraint_definition );
+
+			convertColumnNameListToModel( constraint.getColumnList( ),
+					referential_constraint_definition.getReferencing_columns( )
+							.getReference_column_list( )
+							.getColumn_name_list( ) );
+
+			references_specification references_specification = referential_constraint_definition.getReferences_specification( );
+			referenced_table_and_columns referenced_table_and_columns = references_specification.getReferenced_table_and_columns( );
+
+			convertTableNameToModel( constraint.getReferencedObject( ),
+					referenced_table_and_columns.getTable_name( ) );
+
+			if ( constraint.getReferencedColumnList( ) != null )
+			{
+				reference_column_list reference_column_list = new reference_column_list( );
+				referenced_table_and_columns.setReference_column_list( reference_column_list );
+				convertColumnNameListToModel( constraint.getReferencedColumnList( ),
+						reference_column_list.getColumn_name_list( ) );
+			}
+
+			if ( constraint.getKeyActions( ) != null )
+			{
+				referential_triggered_action referential_triggered_action = new referential_triggered_action( );
+				references_specification.setReferential_triggered_action( referential_triggered_action );
+
+				if ( constraint.getKeyActions( ).size( ) > 0 )
+				{
+					TKeyAction action = constraint.getKeyActions( )
+							.getElement( 0 );
+					if ( action.getActionType( ) == EKeyActionType.delete )
+					{
+						delete_update_rule delete_update_rule = new delete_update_rule( );
+						referential_triggered_action.setDelete_update_rule( delete_update_rule );
+						if ( constraint.getKeyActions( ).size( ) > 1 )
+						{
+							TKeyAction action1 = constraint.getKeyActions( )
+									.getElement( 1 );
+							if ( action1.getActionType( ) == EKeyActionType.update )
+							{
+								update_rule update_rule = new update_rule( );
+								delete_update_rule.setUpdate_rule( update_rule );
+								if ( action1.getKeyReference( ) != null )
+								{
+									TKeyReference keyReference = action1.getKeyReference( );
+									convertKeyReferenceToModel( action1.getKeyReference( ),
+											update_rule.getReferential_action( ) );
+								}
+							}
+						}
+						if ( action.getKeyReference( ) != null )
+						{
+							TKeyReference keyReference = action.getKeyReference( );
+							convertKeyReferenceToModel( action.getKeyReference( ),
+									delete_update_rule.getDelete_rule( )
+											.getReferential_action( ) );
+						}
+					}
+					else if ( action.getActionType( ) == EKeyActionType.update )
+					{
+						update_delete_rule update_delete_rule = new update_delete_rule( );
+						referential_triggered_action.setUpdate_delete_rule( update_delete_rule );
+						if ( constraint.getKeyActions( ).size( ) > 1 )
+						{
+							TKeyAction action1 = constraint.getKeyActions( )
+									.getElement( 1 );
+							if ( action1.getActionType( ) == EKeyActionType.update )
+							{
+								delete_rule delete_rule = new delete_rule( );
+								update_delete_rule.setDelete_rule( delete_rule );
+
+								if ( action1.getKeyReference( ) != null )
+								{
+									TKeyReference keyReference = action.getKeyReference( );
+									convertKeyReferenceToModel( action.getKeyReference( ),
+											delete_rule.getReferential_action( ) );
+								}
+							}
+						}
+						if ( action.getKeyReference( ) != null )
+						{
+							TKeyReference keyReference = action.getKeyReference( );
+							convertKeyReferenceToModel( action.getKeyReference( ),
+									update_delete_rule.getUpdate_rule( )
+											.getReferential_action( ) );
+						}
+					}
+				}
+			}
+		}
+	}
+
+	private void convertKeyReferenceToModel( TKeyReference keyReference,
+			referential_action referential_action )
+	{
+		switch ( keyReference.getReferenceType( ) )
+		{
+			case cascade :
+				referential_action.setKw_cascade( "cascade" );
+				break;
+
+			case no_action :
+				referential_action.setNo_action( new no_action( ) );
+				break;
+
+			case restrict :
+				referential_action.setKw_restrict( "restrict" );
+				break;
+
+			case set_default :
+				referential_action.setSet_default( new set_default( ) );
+				break;
+
+			case set_null :
+				referential_action.setSet_null( new set_null( ) );
+				break;
+		}
 	}
 
 	private void convertColumnDefinitionToTableElement(
@@ -321,6 +468,36 @@ public class AnsiGenerator implements SQL2XMLGenerator
 			data_type_or_domain_name.setData_type( data_type );
 
 			convertTypeNameToDataType( columnDef.getDatatype( ), data_type );
+		}
+
+		if ( columnDef.getConstraints( ) != null )
+		{
+			column_constraint_definition_list column_constraint_definition_list = new column_constraint_definition_list( );
+			column_definition.setColumn_constraint_definition_list( column_constraint_definition_list );
+
+			List<column_constraint_definition> column_constraint_definitions = column_constraint_definition_list.getColumn_constraint_definition( );
+			for ( int i = 0; i < columnDef.getConstraints( ).size( ); i++ )
+			{
+				column_constraint_definition column_constraint_definition = new column_constraint_definition( );
+				column_constraint_definitions.add( column_constraint_definition );
+				TConstraint constraint = columnDef.getConstraints( )
+						.getConstraint( i );
+
+				if ( constraint.getConstraint_type( ) == EConstraintType.unique )
+				{
+					unique_specification unique_specification = new unique_specification( );
+					column_constraint_definition.getColumn_constraint( )
+							.setUnique_specification( unique_specification );
+					unique_specification.setKw_unique( "unique" );
+				}
+				else if ( constraint.getConstraint_type( ) == EConstraintType.primary_key )
+				{
+					unique_specification unique_specification = new unique_specification( );
+					column_constraint_definition.getColumn_constraint( )
+							.setUnique_specification( unique_specification );
+					unique_specification.setPrimary_key( new primary_key( ) );
+				}
+			}
 		}
 	}
 
@@ -1503,8 +1680,7 @@ public class AnsiGenerator implements SQL2XMLGenerator
 		actual_identifier actualIdentifier = tableQualifiedNameModel.getQualified_identifier( )
 				.getIdentifier( )
 				.getActual_identifier( );
-		convertIdentifierToModel( tableName.getObjectString( ),
-				actualIdentifier );
+		convertIdentifierToModel( tableName.toString( ), actualIdentifier );
 	}
 
 	private void convertSchemaToModel( TObjectName name, schema_name schemaName )
@@ -4116,7 +4292,9 @@ public class AnsiGenerator implements SQL2XMLGenerator
 				}
 			}
 		}
-		else if(insert.toString( ).trim( ).matches( "(?i).+(default\\s+values).*" ))
+		else if ( insert.toString( )
+				.trim( )
+				.matches( "(?i).+(default\\s+values).*" ) )
 		{
 			from_default from_default = new from_default( );
 			insert_columns_and_source.setFrom_default( from_default );
