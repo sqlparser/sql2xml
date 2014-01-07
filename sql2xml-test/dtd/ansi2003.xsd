@@ -7017,7 +7017,7 @@
 			<xs:element name="deferrable_constraint_check_time">
 				<xs:complexType>
 					<xs:sequence>
-						<xs:element name="kw_not_deferrable" minOccurs="0">
+						<xs:element name="kw_not_deferrable">
 							<xs:complexType>
 								<xs:sequence>
 									<xs:element ref="kw_not" minOccurs="0"/>
