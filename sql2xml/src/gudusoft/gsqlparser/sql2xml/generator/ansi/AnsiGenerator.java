@@ -32,6 +32,7 @@ import gudusoft.gsqlparser.nodes.TJoinItem;
 import gudusoft.gsqlparser.nodes.TJoinItemList;
 import gudusoft.gsqlparser.nodes.TKeyAction;
 import gudusoft.gsqlparser.nodes.TKeyReference;
+import gudusoft.gsqlparser.nodes.TMergeWhenClause;
 import gudusoft.gsqlparser.nodes.TMultiTarget;
 import gudusoft.gsqlparser.nodes.TObjectName;
 import gudusoft.gsqlparser.nodes.TObjectNameList;
@@ -39,6 +40,7 @@ import gudusoft.gsqlparser.nodes.TOrderBy;
 import gudusoft.gsqlparser.nodes.TOrderByItem;
 import gudusoft.gsqlparser.nodes.TOrderByItemList;
 import gudusoft.gsqlparser.nodes.TResultColumn;
+import gudusoft.gsqlparser.nodes.TResultColumnList;
 import gudusoft.gsqlparser.nodes.TTable;
 import gudusoft.gsqlparser.nodes.TTypeName;
 import gudusoft.gsqlparser.nodes.TWhenClauseItem;
@@ -4407,37 +4409,9 @@ public class AnsiGenerator implements SQL2XMLGenerator
 							.getBoolean_value_expression( ) );
 		}
 
-		List<set_clause> set_clauses = updateStatementSearched.getSet_clause_list( )
-				.getSet_clause( );
-
-		for ( int i = 0; i < update.getResultColumnList( ).size( ); i++ )
-		{
-			set_clause set_clause = new set_clause( );
-			set_clauses.add( set_clause );
-
-			set_target_equals_update_source set_target_equals_update_source = new set_target_equals_update_source( );
-			set_clause.setSet_target_equals_update_source( set_target_equals_update_source );
-
-			TResultColumn column = update.getResultColumnList( )
-					.getResultColumn( i );
-			TExpression expr = column.getExpr( );
-
-			update_target update_target = new update_target( );
-			set_target_equals_update_source.getSet_target( )
-					.setUpdate_target( update_target );
-
-			object_column object_column = new object_column( );
-			update_target.setObject_column( object_column );
-
-			convertObjectName2Model( expr.getLeftOperand( ).getObjectOperand( ),
-					object_column.getColumn_name( ).getIdentifier( ) );
-
-			value_expression value_expression = new value_expression( );
-			set_target_equals_update_source.getUpdate_source( )
-					.setValue_expression( value_expression );
-			convertExpressionToValueExpression( expr.getRightOperand( ),
-					value_expression );
-		}
+		convertResultColumnListToSetClauseList( updateStatementSearched.getSet_clause_list( )
+				.getSet_clause( ),
+				update.getResultColumnList( ) );
 
 	}
 
@@ -4488,8 +4462,144 @@ public class AnsiGenerator implements SQL2XMLGenerator
 	private void convertMergeStmt2Model( TMergeSqlStatement merge,
 			merge_statement mergeStatement )
 	{
-		// TODO Auto-generated method stub
+		TTable table = merge.getTargetTable( );
+		if ( SourceTokenSearcher.indexOf( merge.sourcetokenlist,
+				merge.getStartToken( ).posinlist,
+				merge.getStartToken( ).posinlist,
+				"ONLY" ) != -1 )
+		{
+			only_table_name only_table_name = new only_table_name( );
+			mergeStatement.getTarget_table( )
+					.setOnly_table_name( only_table_name );
+			convertTableNameToModel( table.getTableName( ),
+					only_table_name.getTable_name( ) );
+		}
+		else
+		{
+			table_name table_name = new table_name( );
+			mergeStatement.getTarget_table( ).setTable_name( table_name );
+			convertTableNameToModel( table.getTableName( ), table_name );
+		}
+		if ( table.getAliasClause( ) != null )
+		{
+			as_merge_correlation_name as_merge_correlation_name = new as_merge_correlation_name( );
+			mergeStatement.setAs_merge_correlation_name( as_merge_correlation_name );
+			if ( table.getAliasClause( ).getAsToken( ) != null )
+			{
+				as_merge_correlation_name.setKw_as( "as" );
+			}
+			convertObjectName2Model( table.getAliasClause( ).getAliasName( ),
+					as_merge_correlation_name.getMerge_correlation_name( )
+							.getCorrelation_name( )
+							.getIdentifier( ) );
+		}
+		if ( merge.getUsingTable( ) != null )
+		{
+			table_factor tableFactor = new table_factor( );
+			mergeStatement.getTable_reference( ).setTable_factor( tableFactor );
+			convertTableToTableFactor( merge.getUsingTable( ), tableFactor );
+		}
+		if ( merge.getCondition( ) != null )
+		{
+			convertBooleanExpressionToModel( merge.getCondition( ),
+					mergeStatement.getSearch_condition( )
+							.getBoolean_value_expression( ) );
+		}
+		if ( merge.getWhenClauses( ) != null )
+		{
+			List<merge_when_clause> merge_when_clauses = mergeStatement.getMerge_operation_specification( )
+					.getMerge_when_clause( );
 
+			for ( int i = 0; i < merge.getWhenClauses( ).size( ); i++ )
+			{
+				merge_when_clause merge_when_clause = new merge_when_clause( );
+				merge_when_clauses.add( merge_when_clause );
+				TMergeWhenClause whenClause = merge.getWhenClauses( )
+						.getElement( i );
+				convertMergeWhenClauseToModel( whenClause, merge_when_clause );
+			}
+		}
+	}
+
+	private void convertMergeWhenClauseToModel( TMergeWhenClause whenClause,
+			merge_when_clause merge_when_clause )
+	{
+		if ( whenClause.getUpdateClause( ) != null )
+		{
+			merge_when_matched_clause merge_when_matched_clause = new merge_when_matched_clause( );
+			merge_when_clause.setMerge_when_matched_clause( merge_when_matched_clause );
+			convertResultColumnListToSetClauseList( merge_when_matched_clause.getMerge_update_specification( )
+					.getSet_clause_list( )
+					.getSet_clause( ),
+					whenClause.getUpdateClause( ).getUpdateColumnList( ) );
+
+		}
+		else if ( whenClause.getInsertClause( ) != null )
+		{
+			merge_when_not_matched_clause merge_when_not_matched_clause = new merge_when_not_matched_clause( );
+			merge_when_clause.setMerge_when_not_matched_clause( merge_when_not_matched_clause );
+
+			merge_insert_specification merge_insert_specification = merge_when_not_matched_clause.getMerge_insert_specification( );
+			if ( whenClause.getInsertClause( ).getColumnList( ) != null )
+			{
+				insert_column_list insert_column_list = new insert_column_list( );
+				merge_insert_specification.setInsert_column_list( insert_column_list );
+				convertColumnNameListToModel( whenClause.getInsertClause( )
+						.getColumnList( ),
+						insert_column_list.getColumn_name_list( ) );
+			}
+			if ( whenClause.getInsertClause( ).getValuelist( ) != null )
+			{
+				List<merge_insert_value_element> merge_insert_value_elements = merge_insert_specification.getMerge_insert_value_list( )
+						.getMerge_insert_value_element( );
+				for ( int i = 0; i < whenClause.getInsertClause( )
+						.getValuelist( )
+						.size( ); i++ )
+				{
+					merge_insert_value_element merge_insert_value_element = new merge_insert_value_element( );
+					merge_insert_value_elements.add( merge_insert_value_element );
+					TResultColumn column = whenClause.getInsertClause( )
+							.getValuelist( )
+							.getResultColumn( i );
+					value_expression value_expression = new value_expression( );
+					merge_insert_value_element.setValue_expression( value_expression );
+					convertExpressionToValueExpression( column.getExpr( ),
+							value_expression );
+				}
+			}
+		}
+	}
+
+	private void convertResultColumnListToSetClauseList(
+			List<set_clause> set_clauses, TResultColumnList columnList )
+	{
+		for ( int i = 0; i < columnList.size( ); i++ )
+		{
+			set_clause set_clause = new set_clause( );
+			set_clauses.add( set_clause );
+
+			set_target_equals_update_source set_target_equals_update_source = new set_target_equals_update_source( );
+			set_clause.setSet_target_equals_update_source( set_target_equals_update_source );
+
+			TResultColumn column = columnList.getResultColumn( i );
+			TExpression expr = column.getExpr( );
+
+			update_target update_target = new update_target( );
+			set_target_equals_update_source.getSet_target( )
+					.setUpdate_target( update_target );
+
+			object_column object_column = new object_column( );
+			update_target.setObject_column( object_column );
+
+			convertObjectName2Model( expr.getLeftOperand( ).getObjectOperand( ),
+					object_column.getColumn_name( ).getIdentifier( ) );
+
+			value_expression value_expression = new value_expression( );
+			set_target_equals_update_source.getUpdate_source( )
+					.setValue_expression( value_expression );
+			convertExpressionToValueExpression( expr.getRightOperand( ),
+					value_expression );
+		}
 	}
 
 	public String getErrorMessage( )
