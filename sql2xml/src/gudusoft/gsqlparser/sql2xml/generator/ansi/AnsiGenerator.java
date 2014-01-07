@@ -1680,7 +1680,16 @@ public class AnsiGenerator implements SQL2XMLGenerator
 		actual_identifier actualIdentifier = tableQualifiedNameModel.getQualified_identifier( )
 				.getIdentifier( )
 				.getActual_identifier( );
-		convertIdentifierToModel( tableName.toString( ), actualIdentifier );
+		if ( tableName.getPartString( ) != null )
+		{
+			convertIdentifierToModel( tableName.getPartString( ),
+					actualIdentifier );
+		}
+		else if ( tableName.getObjectString( ) != null )
+		{
+			convertIdentifierToModel( tableName.getObjectString( ),
+					actualIdentifier );
+		}
 	}
 
 	private void convertSchemaToModel( TObjectName name, schema_name schemaName )
@@ -1700,27 +1709,27 @@ public class AnsiGenerator implements SQL2XMLGenerator
 						.getActual_identifier( ) );
 	}
 
-	private void convertIdentifierToModel( String tableName,
+	private void convertIdentifierToModel( String name,
 			actual_identifier actualIdentifier )
 	{
-		if ( tableName.startsWith( "&" ) )
+		if ( name.startsWith( "&" ) )
 		{
 			unicode_delimited_identifier identifier = new unicode_delimited_identifier( );
 			actualIdentifier.setUnicode_delimited_identifier( identifier );
-			identifier.setUnicode_delimiter_body( tableName.substring( 2,
-					tableName.length( ) - 1 ) );
+			identifier.setUnicode_delimiter_body( name.substring( 2,
+					name.length( ) - 1 ) );
 		}
-		else if ( ( tableName.startsWith( "\"" ) && tableName.endsWith( "\"" ) )
-				|| ( tableName.startsWith( "'" ) && tableName.endsWith( "'" ) ) )
+		else if ( ( name.startsWith( "\"" ) && name.endsWith( "\"" ) )
+				|| ( name.startsWith( "'" ) && name.endsWith( "'" ) ) )
 		{
 			delimited_identifier identifier = new delimited_identifier( );
 			actualIdentifier.setDelimited_identifier( identifier );
-			identifier.setDelimited_identifier_body( tableName.substring( 1,
-					tableName.length( ) - 1 ) );
+			identifier.setDelimited_identifier_body( name.substring( 1,
+					name.length( ) - 1 ) );
 		}
 		else
 		{
-			actualIdentifier.setRegular_identifier( tableName );
+			actualIdentifier.setRegular_identifier( name );
 		}
 	}
 
