@@ -1,0 +1,1 @@
+insert into t2(f3,f4) select f1,f2 from t1;

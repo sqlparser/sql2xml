@@ -4051,8 +4051,25 @@ public class AnsiGenerator implements SQL2XMLGenerator
 	private void convertInsertStmt2Model( TInsertSqlStatement insert,
 			insert_statement insertStatement )
 	{
-		// TODO Auto-generated method stub
+		TTable table = insert.getTargetTable( );
+		convertTableNameToModel( table.getTableName( ),
+				insertStatement.getInsertion_target( ).getTable_name( ) );
 
+		insert_columns_and_source insert_columns_and_source = insertStatement.getInsert_columns_and_source( );
+		if ( insert.getSubQuery( ) != null )
+		{
+			from_subquery from_subquery = new from_subquery( );
+			insert_columns_and_source.setFrom_subquery( from_subquery );
+			if ( insert.getColumnList( ) != null )
+			{
+				insert_column_list insert_column_list = new insert_column_list( );
+				from_subquery.setInsert_column_list( insert_column_list );
+				convertColumnNameListToModel( insert.getColumnList( ),
+						insert_column_list.getColumn_name_list( ) );
+			}
+			convertSelectToQueryExpression( insert.getSubQuery( ),
+					from_subquery.getQuery_expression( ) );
+		}
 	}
 
 	private void convertUpdateStmt2Model( TUpdateSqlStatement update,
