@@ -1,0 +1,1 @@
+alter table t2 add foreign key(f3,f4) references t1(f1,f2)

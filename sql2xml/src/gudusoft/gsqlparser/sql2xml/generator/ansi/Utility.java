@@ -2,6 +2,7 @@
 package gudusoft.gsqlparser.sql2xml.generator.ansi;
 
 import gudusoft.gsqlparser.TCustomSqlStatement;
+import gudusoft.gsqlparser.stmt.TAlterTableStatement;
 import gudusoft.gsqlparser.stmt.TCreateTableSqlStatement;
 import gudusoft.gsqlparser.stmt.TDeleteSqlStatement;
 import gudusoft.gsqlparser.stmt.TInsertSqlStatement;
@@ -45,6 +46,8 @@ public class Utility
 	{
 		if ( stmt instanceof TCreateTableSqlStatement )
 			return true;
+		if ( stmt instanceof TAlterTableStatement )
+			return true;
 		return false;
 	}
 
@@ -56,7 +59,8 @@ public class Utility
 				|| stmt instanceof TUpdateSqlStatement
 				|| stmt instanceof TDeleteSqlStatement
 				|| stmt instanceof TMergeSqlStatement
-				|| stmt instanceof TCreateTableSqlStatement )
+				|| stmt instanceof TCreateTableSqlStatement
+				|| stmt instanceof TAlterTableStatement )
 			return true;
 		return false;
 	}

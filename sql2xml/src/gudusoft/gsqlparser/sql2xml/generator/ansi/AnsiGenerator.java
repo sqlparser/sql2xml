@@ -2,6 +2,7 @@
 package gudusoft.gsqlparser.sql2xml.generator.ansi;
 
 import gudusoft.gsqlparser.EAggregateType;
+import gudusoft.gsqlparser.EAlterTableOptionType;
 import gudusoft.gsqlparser.EConstraintType;
 import gudusoft.gsqlparser.EDbVendor;
 import gudusoft.gsqlparser.EExpressionType;
@@ -14,6 +15,8 @@ import gudusoft.gsqlparser.TGSqlParser;
 import gudusoft.gsqlparser.TSourceToken;
 import gudusoft.gsqlparser.TStatementList;
 import gudusoft.gsqlparser.nodes.TAliasClause;
+import gudusoft.gsqlparser.nodes.TAlterTableOption;
+import gudusoft.gsqlparser.nodes.TAlterTableOptionList;
 import gudusoft.gsqlparser.nodes.TAnalyticFunction;
 import gudusoft.gsqlparser.nodes.TCTEList;
 import gudusoft.gsqlparser.nodes.TCaseExpression;
@@ -48,6 +51,7 @@ import gudusoft.gsqlparser.nodes.TWhenClauseItemList;
 import gudusoft.gsqlparser.nodes.TWhereClause;
 import gudusoft.gsqlparser.sql2xml.generator.SQL2XMLGenerator;
 import gudusoft.gsqlparser.sql2xml.model.*;
+import gudusoft.gsqlparser.stmt.TAlterTableStatement;
 import gudusoft.gsqlparser.stmt.TCreateTableSqlStatement;
 import gudusoft.gsqlparser.stmt.TDeleteSqlStatement;
 import gudusoft.gsqlparser.stmt.TInsertSqlStatement;
@@ -81,7 +85,7 @@ public class AnsiGenerator implements SQL2XMLGenerator
 			return null;
 		}
 		else
-			return convertSQL2XML( sqlparser );
+			return convertSQLToXML( sqlparser );
 	}
 
 	public String generateXML( String sql )
@@ -96,7 +100,7 @@ public class AnsiGenerator implements SQL2XMLGenerator
 			return null;
 		}
 		else
-			return convertSQL2XML( sqlparser );
+			return convertSQLToXML( sqlparser );
 	}
 
 	public String generateXML( EDbVendor vendor, File sqlFile )
@@ -111,7 +115,7 @@ public class AnsiGenerator implements SQL2XMLGenerator
 			return null;
 		}
 		else
-			return convertSQL2XML( sqlparser );
+			return convertSQLToXML( sqlparser );
 	}
 
 	public String generateXML( File sqlFile )
@@ -126,17 +130,17 @@ public class AnsiGenerator implements SQL2XMLGenerator
 			return null;
 		}
 		else
-			return convertSQL2XML( sqlparser );
+			return convertSQLToXML( sqlparser );
 	}
 
-	protected String convertSQL2XML( TGSqlParser sqlparser )
+	protected String convertSQLToXML( TGSqlParser sqlparser )
 	{
 		StringBuffer buffer = new StringBuffer( );
 		TStatementList stmts = sqlparser.getSqlstatements( );
 		for ( int i = 0; i < stmts.size( ); i++ )
 		{
 			direct_sql_statement directSqlStatement = new direct_sql_statement( );
-			convertStmt2Model( stmts.get( i ),
+			convertStmtToModel( stmts.get( i ),
 					directSqlStatement.getDirectly_executable_statement( ) );
 
 			try
@@ -155,7 +159,7 @@ public class AnsiGenerator implements SQL2XMLGenerator
 		return buffer.toString( );
 	}
 
-	protected void convertStmt2Model( TCustomSqlStatement stmt,
+	protected void convertStmtToModel( TCustomSqlStatement stmt,
 			directly_executable_statement directlyExecutableStatement )
 	{
 		if ( Utility.isDirectly_executable_statement( stmt ) )
@@ -170,7 +174,7 @@ public class AnsiGenerator implements SQL2XMLGenerator
 					TSelectSqlStatement select = (TSelectSqlStatement) stmt;
 					direct_select_statement_multiple_rows directSelectStatementMultipleRows = new direct_select_statement_multiple_rows( );
 					directSqlDataStatement.setDirect_select_statement_multiple_rows( directSelectStatementMultipleRows );
-					convertSelectStmt2Model( select,
+					convertSelectStmtToModel( select,
 							directSelectStatementMultipleRows );
 				}
 				else if ( stmt instanceof TInsertSqlStatement )
@@ -178,28 +182,28 @@ public class AnsiGenerator implements SQL2XMLGenerator
 					TInsertSqlStatement insert = (TInsertSqlStatement) stmt;
 					insert_statement insertStatement = new insert_statement( );
 					directSqlDataStatement.setInsert_statement( insertStatement );
-					convertInsertStmt2Model( insert, insertStatement );
+					convertInsertStmtToModel( insert, insertStatement );
 				}
 				else if ( stmt instanceof TUpdateSqlStatement )
 				{
 					TUpdateSqlStatement update = (TUpdateSqlStatement) stmt;
 					update_statement_searched updateStatementSearched = new update_statement_searched( );
 					directSqlDataStatement.setUpdate_statement_searched( updateStatementSearched );
-					convertUpdateStmt2Model( update, updateStatementSearched );
+					convertUpdateStmtToModel( update, updateStatementSearched );
 				}
 				else if ( stmt instanceof TDeleteSqlStatement )
 				{
 					TDeleteSqlStatement delete = (TDeleteSqlStatement) stmt;
 					delete_statement_searched deleteStatementSearched = new delete_statement_searched( );
 					directSqlDataStatement.setDelete_statement_searched( deleteStatementSearched );
-					convertDeleteStmt2Model( delete, deleteStatementSearched );
+					convertDeleteStmtToModel( delete, deleteStatementSearched );
 				}
 				else if ( stmt instanceof TMergeSqlStatement )
 				{
 					TMergeSqlStatement merge = (TMergeSqlStatement) stmt;
 					merge_statement mergeStatement = new merge_statement( );
 					directSqlDataStatement.setMerge_statement( mergeStatement );
-					convertMergeStmt2Model( merge, mergeStatement );
+					convertMergeStmtToModel( merge, mergeStatement );
 				}
 			}
 			else if ( Utility.isSql_schema_statement( stmt ) )
@@ -213,13 +217,107 @@ public class AnsiGenerator implements SQL2XMLGenerator
 					sqlSchemaStatement.setSql_schema_definition_statement( sql_schema_definition_statement );
 					table_definition table_definition = new table_definition( );
 					sql_schema_definition_statement.setTable_definition( table_definition );
-					convertCreateTableStmt2Model( createTable, table_definition );
+					convertCreateTableStmtToModel( createTable,
+							table_definition );
+				}
+				else if ( stmt instanceof TAlterTableStatement )
+				{
+					TAlterTableStatement alterTable = (TAlterTableStatement) stmt;
+					sql_schema_manipulation_statement sql_schema_manipulation_statement = new sql_schema_manipulation_statement( );
+					sqlSchemaStatement.setSql_schema_manipulation_statement( sql_schema_manipulation_statement );
+					alter_table_statement alter_table_statement = new alter_table_statement( );
+					sql_schema_manipulation_statement.setAlter_table_statement( alter_table_statement );
+					convertAlterTableStmtToModel( alterTable,
+							alter_table_statement );
 				}
 			}
 		}
 	}
 
-	private void convertCreateTableStmt2Model(
+	private void convertAlterTableStmtToModel( TAlterTableStatement alterTable,
+			alter_table_statement alter_table_statement )
+	{
+		convertTableNameToModel( alterTable.getTableName( ),
+				alter_table_statement.getTable_name( ) );
+		convertAlterTableActionToModel( alterTable,
+				alter_table_statement.getAlter_table_action( ) );
+	}
+
+	private void convertAlterTableActionToModel(
+			TAlterTableStatement alterTable,
+			alter_table_action alter_table_action )
+	{
+		TAlterTableOptionList options = alterTable.getAlterTableOptionList( );
+		for ( int i = 0; i < options.size( ); i++ )
+		{
+			TAlterTableOption option = options.getAlterTableOption( i );
+			convertAlterTableOptionToModel( option, alter_table_action );
+		}
+	}
+
+	private void convertAlterTableOptionToModel( TAlterTableOption option,
+			alter_table_action alter_table_action )
+	{
+		if ( option.getOptionType( ) == EAlterTableOptionType.AddColumn
+				&& option.getColumnDefinitionList( ) != null )
+		{
+			add_column_definition add_column_definition = new add_column_definition( );
+			alter_table_action.setAdd_column_definition( add_column_definition );
+
+			for ( int i = 0; i < option.getColumnDefinitionList( ).size( ); i++ )
+			{
+				TColumnDefinition columnDef = option.getColumnDefinitionList( )
+						.getColumn( i );
+				convertColumnDefinitionToModel( columnDef,
+						add_column_definition.getColumn_definition( ) );
+			}
+		}
+		else if ( option.getOptionType( ) == EAlterTableOptionType.DropConstraint
+				&& option.getConstraintName( ) != null )
+		{
+			drop_table_constraint_definition drop_table_constraint_definition = new drop_table_constraint_definition( );
+			alter_table_action.setDrop_table_constraint_definition( drop_table_constraint_definition );
+			convertObjectNameToSchemaQualifiedName( option.getConstraintName( ),
+					drop_table_constraint_definition.getConstraint_name( )
+							.getSchema_qualified_name( ) );
+			drop_table_constraint_definition.getDrop_behavior( )
+					.setKw_cascade( "cascade" );
+
+		}
+		else if ( option.getOptionType( ) == EAlterTableOptionType.DropColumn
+				&& option.getColumnNameList( ) != null )
+		{
+			drop_column_definition drop_column_definition = new drop_column_definition( );
+			alter_table_action.setDrop_column_definition( drop_column_definition );
+			for ( int i = 0; i < option.getColumnNameList( ).size( ); i++ )
+			{
+				TObjectName name = option.getColumnNameList( )
+						.getObjectName( i );
+				convertObjectNameToModel( name,
+						drop_column_definition.getColumn_name( )
+								.getIdentifier( ) );
+			}
+			drop_column_definition.getDrop_behavior( )
+					.setKw_cascade( "cascade" );
+
+		}
+		else if ( option.getOptionType( ) == EAlterTableOptionType.AddConstraint
+				&& option.getConstraintList( ) != null )
+		{
+			add_table_constraint_definition add_table_constraint_definition = new add_table_constraint_definition( );
+			alter_table_action.setAdd_table_constraint_definition( add_table_constraint_definition );
+
+			for ( int i = 0; i < option.getConstraintList( ).size( ); i++ )
+			{
+				TConstraint constraint = option.getConstraintList( )
+						.getConstraint( i );
+				convertConstraintToTableConstraintDefinition( constraint,
+						add_table_constraint_definition.getTable_constraint_definition( ) );
+			}
+		}
+	}
+
+	private void convertCreateTableStmtToModel(
 			TCreateTableSqlStatement createTable,
 			table_definition table_definition )
 	{
@@ -286,6 +384,14 @@ public class AnsiGenerator implements SQL2XMLGenerator
 		table_constraint_definition table_constraint_definition = new table_constraint_definition( );
 		element.setTable_constraint_definition( table_constraint_definition );
 
+		convertConstraintToTableConstraintDefinition( constraint,
+				table_constraint_definition );
+	}
+
+	private void convertConstraintToTableConstraintDefinition(
+			TConstraint constraint,
+			table_constraint_definition table_constraint_definition )
+	{
 		if ( constraint.getConstraint_type( ) == EConstraintType.unique )
 		{
 			unique_constraint_definition unique_constraint_definition = new unique_constraint_definition( );
@@ -348,15 +454,20 @@ public class AnsiGenerator implements SQL2XMLGenerator
 	{
 		schema_qualified_name schema_qualified_name = constraint_name_definition.getConstraint_name( )
 				.getSchema_qualified_name( );
+		TObjectName name = constraint.getConstraintName( );
+		convertObjectNameToSchemaQualifiedName( name, schema_qualified_name );
+	}
 
-		if ( constraint.getConstraintName( ).getSchemaString( ) != null )
+	private void convertObjectNameToSchemaQualifiedName( TObjectName name,
+			schema_qualified_name schema_qualified_name )
+	{
+		if ( name.getSchemaString( ) != null )
 		{
 			schema_name schemaName = new schema_name( );
 			schema_qualified_name.setSchema_name( schemaName );
-			convertSchemaToModel( constraint.getConstraintName( ), schemaName );
+			convertSchemaToModel( name, schemaName );
 		}
-		convertIdentifierToModel( constraint.getConstraintName( )
-				.getObjectString( ),
+		convertIdentifierToModel( name.getObjectString( ),
 				schema_qualified_name.getQualified_identifier( )
 						.getIdentifier( )
 						.getActual_identifier( ) );
@@ -476,7 +587,13 @@ public class AnsiGenerator implements SQL2XMLGenerator
 	{
 		column_definition column_definition = new column_definition( );
 		element.setColumn_definition( column_definition );
-		convertObjectName2Model( columnDef.getColumnName( ),
+		convertColumnDefinitionToModel( columnDef, column_definition );
+	}
+
+	private void convertColumnDefinitionToModel( TColumnDefinition columnDef,
+			column_definition column_definition )
+	{
+		convertObjectNameToModel( columnDef.getColumnName( ),
 				column_definition.getColumn_name( ).getIdentifier( ) );
 
 		if ( columnDef.getDatatype( ) != null )
@@ -541,6 +658,11 @@ public class AnsiGenerator implements SQL2XMLGenerator
 					convertConstraintToCheckConstraintDefinition( constraint,
 							check_constraint_definition );
 				}
+				else if ( constraint.getConstraint_type( ) == EConstraintType.notnull )
+				{
+					column_constraint_definition.getColumn_constraint( )
+							.setNot_null( new not_null( ) );
+				}
 			}
 		}
 	}
@@ -557,7 +679,7 @@ public class AnsiGenerator implements SQL2XMLGenerator
 		}
 	}
 
-	private void convertSelectStmt2Model(
+	private void convertSelectStmtToModel(
 			TSelectSqlStatement select,
 			direct_select_statement_multiple_rows directSelectStatementMultipleRows )
 	{
@@ -571,7 +693,7 @@ public class AnsiGenerator implements SQL2XMLGenerator
 		{
 			order_by_clause orderByClause = new order_by_clause( );
 			cursorSpecification.setOrder_by_clause( orderByClause );
-			convertOrderbyClause2Model( select.getOrderbyClause( ),
+			convertOrderbyClauseToModel( select.getOrderbyClause( ),
 					orderByClause );
 		}
 
@@ -579,7 +701,7 @@ public class AnsiGenerator implements SQL2XMLGenerator
 		{
 			updatability_clause updatabilityClause = new updatability_clause( );
 			cursorSpecification.setUpdatability_clause( updatabilityClause );
-			convertForUpdateClause2Model( select.getForUpdateClause( ),
+			convertForUpdateClauseToModel( select.getForUpdateClause( ),
 					updatabilityClause );
 		}
 	}
@@ -591,7 +713,7 @@ public class AnsiGenerator implements SQL2XMLGenerator
 		{
 			with_clause withClause = new with_clause( );
 			queryExpression.setWith_clause( withClause );
-			convertWithClause2Model( select.getCteList( ), withClause );
+			convertWithClauseToModel( select.getCteList( ), withClause );
 		}
 
 		query_expression_body queryExpreesionBody = queryExpression.getQuery_expression_body( );
@@ -821,7 +943,7 @@ public class AnsiGenerator implements SQL2XMLGenerator
 			column_name columnName = new column_name( );
 			columnNames.add( columnName );
 			identifier identifier = columnName.getIdentifier( );
-			convertObjectName2Model( columns.getObjectName( i ), identifier );
+			convertObjectNameToModel( columns.getObjectName( i ), identifier );
 		}
 	}
 
@@ -1846,7 +1968,7 @@ public class AnsiGenerator implements SQL2XMLGenerator
 			asClause.setKw_as( "as" );
 		}
 
-		convertObjectName2Model( aliasClause.getAliasName( ),
+		convertObjectNameToModel( aliasClause.getAliasName( ),
 				asClause.getColumn_name( ).getIdentifier( ) );
 	}
 
@@ -1884,7 +2006,7 @@ public class AnsiGenerator implements SQL2XMLGenerator
 	private void convertResultColumnToAsteriskedIdentifier(
 			TResultColumn column, asterisked_identifier asteriskedIdentifier )
 	{
-		convertObjectName2Model( column.getFieldAttr( ),
+		convertObjectNameToModel( column.getFieldAttr( ),
 				asteriskedIdentifier.getIdentifier( ) );
 	}
 
@@ -1919,14 +2041,14 @@ public class AnsiGenerator implements SQL2XMLGenerator
 
 	}
 
-	private void convertWithClause2Model( TCTEList cteList,
+	private void convertWithClauseToModel( TCTEList cteList,
 			with_clause withClause )
 	{
 		// TODO Auto-generated method stub
 
 	}
 
-	private void convertForUpdateClause2Model( TForUpdate forUpdate,
+	private void convertForUpdateClauseToModel( TForUpdate forUpdate,
 			updatability_clause updatabilityClause )
 	{
 		read_only_or_update_of readOnlyOrUpdateOf = new read_only_or_update_of( );
@@ -1960,11 +2082,11 @@ public class AnsiGenerator implements SQL2XMLGenerator
 			column_name columnName = new column_name( );
 			columnNames.add( columnName );
 			identifier identifier = columnName.getIdentifier( );
-			convertObjectName2Model( column, identifier );
+			convertObjectNameToModel( column, identifier );
 		}
 	}
 
-	private void convertObjectName2Model( TObjectName objectName,
+	private void convertObjectNameToModel( TObjectName objectName,
 			identifier identifier )
 	{
 		actual_identifier actualIdentifier = identifier.getActual_identifier( );
@@ -1984,7 +2106,7 @@ public class AnsiGenerator implements SQL2XMLGenerator
 		}
 	}
 
-	private void convertOrderbyClause2Model( TOrderBy orderby,
+	private void convertOrderbyClauseToModel( TOrderBy orderby,
 			order_by_clause orderByClause )
 	{
 		sort_specification_list sortSpecificationList = new sort_specification_list( );
@@ -4291,7 +4413,7 @@ public class AnsiGenerator implements SQL2XMLGenerator
 		return false;
 	}
 
-	private void convertInsertStmt2Model( TInsertSqlStatement insert,
+	private void convertInsertStmtToModel( TInsertSqlStatement insert,
 			insert_statement insertStatement )
 	{
 		TTable table = insert.getTargetTable( );
@@ -4366,7 +4488,7 @@ public class AnsiGenerator implements SQL2XMLGenerator
 		}
 	}
 
-	private void convertUpdateStmt2Model( TUpdateSqlStatement update,
+	private void convertUpdateStmtToModel( TUpdateSqlStatement update,
 			update_statement_searched updateStatementSearched )
 	{
 		TTable table = update.getTargetTable( );
@@ -4396,7 +4518,7 @@ public class AnsiGenerator implements SQL2XMLGenerator
 			{
 				as_correlation_name.setKw_as( "as" );
 			}
-			convertObjectName2Model( table.getAliasClause( ).getAliasName( ),
+			convertObjectNameToModel( table.getAliasClause( ).getAliasName( ),
 					as_correlation_name.getCorrelation_name( ).getIdentifier( ) );
 		}
 		if ( update.getWhereClause( ) != null )
@@ -4415,7 +4537,7 @@ public class AnsiGenerator implements SQL2XMLGenerator
 
 	}
 
-	private void convertDeleteStmt2Model( TDeleteSqlStatement delete,
+	private void convertDeleteStmtToModel( TDeleteSqlStatement delete,
 			delete_statement_searched deleteStatementSearched )
 	{
 		TTable table = delete.getTargetTable( );
@@ -4445,7 +4567,7 @@ public class AnsiGenerator implements SQL2XMLGenerator
 			{
 				as_correlation_name.setKw_as( "as" );
 			}
-			convertObjectName2Model( table.getAliasClause( ).getAliasName( ),
+			convertObjectNameToModel( table.getAliasClause( ).getAliasName( ),
 					as_correlation_name.getCorrelation_name( ).getIdentifier( ) );
 		}
 		if ( delete.getWhereClause( ) != null )
@@ -4459,7 +4581,7 @@ public class AnsiGenerator implements SQL2XMLGenerator
 		}
 	}
 
-	private void convertMergeStmt2Model( TMergeSqlStatement merge,
+	private void convertMergeStmtToModel( TMergeSqlStatement merge,
 			merge_statement mergeStatement )
 	{
 		TTable table = merge.getTargetTable( );
@@ -4488,7 +4610,7 @@ public class AnsiGenerator implements SQL2XMLGenerator
 			{
 				as_merge_correlation_name.setKw_as( "as" );
 			}
-			convertObjectName2Model( table.getAliasClause( ).getAliasName( ),
+			convertObjectNameToModel( table.getAliasClause( ).getAliasName( ),
 					as_merge_correlation_name.getMerge_correlation_name( )
 							.getCorrelation_name( )
 							.getIdentifier( ) );
@@ -4591,7 +4713,7 @@ public class AnsiGenerator implements SQL2XMLGenerator
 			object_column object_column = new object_column( );
 			update_target.setObject_column( object_column );
 
-			convertObjectName2Model( expr.getLeftOperand( ).getObjectOperand( ),
+			convertObjectNameToModel( expr.getLeftOperand( ).getObjectOperand( ),
 					object_column.getColumn_name( ).getIdentifier( ) );
 
 			value_expression value_expression = new value_expression( );

@@ -1,0 +1,1 @@
+alter table t1 add unique (f1,f2)

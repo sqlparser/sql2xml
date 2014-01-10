@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding= "UTF-8" ?>
+<direct_sql_statement xmlns="http://www.sqlparser.com/xml/ansi2003" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sqlparser.com/xml/ansi2003 http://sqlparser.com/xml/ansi2003/ansi2003.xsd">
+   <directly_executable_statement>
+      <sql_schema_statement>
+         <sql_schema_manipulation_statement>
+            <alter_table_statement>
+               <kw_alter>alter</kw_alter>
+               <kw_table>table</kw_table>
+               <table_name>
+                  <local_or_schema_qualified_name>
+                     <qualified_identifier>
+                        <identifier>
+                           <actual_identifier>
+                              <regular_identifier>t2</regular_identifier>
+                           </actual_identifier>
+                        </identifier>
+                     </qualified_identifier>
+                  </local_or_schema_qualified_name>
+               </table_name>
+               <alter_table_action>
+                  <drop_table_constraint_definition>
+                     <kw_drop>drop</kw_drop>
+                     <kw_constraint>constraint</kw_constraint>
+                     <constraint_name>
+                        <schema_qualified_name>
+                           <qualified_identifier>
+                              <identifier>
+                                 <actual_identifier>
+                                    <regular_identifier>c1</regular_identifier>
+                                 </actual_identifier>
+                              </identifier>
+                           </qualified_identifier>
+                        </schema_qualified_name>
+                     </constraint_name>
+                     <drop_behavior>
+                        <kw_cascade>cascade</kw_cascade>
+                     </drop_behavior>
+                  </drop_table_constraint_definition>
+               </alter_table_action>
+            </alter_table_statement>
+         </sql_schema_manipulation_statement>
+      </sql_schema_statement>
+   </directly_executable_statement>
+   <semicolon>;</semicolon>
+</direct_sql_statement>
